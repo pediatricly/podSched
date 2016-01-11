@@ -91,7 +91,7 @@ def amionLookup(AmName, htmli):
     # ['2016-01-10', 'Sun, Jan 10, 2016', [{'shifts': ['UCW3-Day'], 'AmionName':
     # 'Sun-V'}, {'shifts': ['Not Found'], 'AmionName': 'Wu-L'}]]
 
-    return [pyDate.isoformat(), dStr[0], outList]
+    return {pyDate.isoformat() : outList}
 ###################################################################
 ### Read the CSV list from active dir
 ### This should contain shiftName, cleanRotName, quality, night
@@ -133,12 +133,20 @@ fh.close()
 # PURPLE1-Day': {'score': -1, 'quality': 'bad', 'night': ''},}
 
 #################################################################################
+endDate = DT.date(2016,2,1)
+startDate = DT.date.today()
+tracker = startDate
+days = (endDate - startDate)
+increment = DT.timedelta(days=1)
+print startDate + increment
+while tracker < endDate:
+    print tracker
+    tracker = tracker + increment
 
-
-allDays = []
+allDays = {}
 # Date range loop starts here:
 
-
+'''
 AmionNames = ['Sun-V', 'Wu-L']
 baseUrl = "http://amion.com/cgi-bin/ocs"
 AmionLogin = {"login" : "ucsfpeds"}
@@ -148,8 +156,7 @@ html = r.content # And this stores that html as a string
 
 
 lookUp = amionLookup(AmionNames, html)
-print lookUp
-data = lookUp[2]
+data = lookUp.values()[0]
 dayList = []
 for resident in data:
     shifts = resident['shifts']
@@ -167,14 +174,16 @@ for resident in data:
 dayScore = 0
 for resident in dayList:
     dayScore += resident[score]
-allDays.append([lookUp[0], lookUp[1], dayScore, dayList])
-print allDays
+allDays[lookUp.keys()[0]] = {'dayScore' : dayScore, 'data' :dayList}
+#print allDays
+# {'2016-01-10': {'dayScore': -1, 'data': [{'shifts': ['UCW3-Day'], 'score': -1,
+# 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0,
+# 'AmionName': 'Wu-L', 'missing': 1}]}}
 
 nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
 se = re.findall(nextDay, html, re.M)
 # print se[0]
 
-'''
 # Functional code to iterate the next day:
 r2 = requests.get(str(baseUrl + se[0]))
 html2 = r2.content
