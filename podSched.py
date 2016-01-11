@@ -133,66 +133,58 @@ fh.close()
 # PURPLE1-Day': {'score': -1, 'quality': 'bad', 'night': ''},}
 
 #################################################################################
-endDate = DT.date(2016,2,1)
+endDate = DT.date(2016,1,15)
 startDate = DT.date.today()
 tracker = startDate
 days = (endDate - startDate)
 increment = DT.timedelta(days=1)
-print startDate + increment
-while tracker < endDate:
-    print tracker
-    tracker = tracker + increment
 
-allDays = {}
-# Date range loop starts here:
-
-'''
 AmionNames = ['Sun-V', 'Wu-L']
+allDays = {}
+
 baseUrl = "http://amion.com/cgi-bin/ocs"
 AmionLogin = {"login" : "ucsfpeds"}
-r = requests.post(baseUrl, data=AmionLogin)
+req0 = requests.post(baseUrl, data=AmionLogin)
 # print(r.text) # This is outputting the html of the actual schedule landing page
-html = r.content # And this stores that html as a string
+html = req0.content # And this stores that html as a string
+nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
+nextLink = re.findall(nextDay, html, re.M)[0]
 
+# Date range loop starts here:
+while tracker < endDate:
+    reqI = requests.get(baseUrl + nextLink)
+    htmlI = reqI.content
+    nextLink = re.findall(nextDay, htmlI, re.M)[0]
 
-lookUp = amionLookup(AmionNames, html)
-data = lookUp.values()[0]
-dayList = []
-for resident in data:
-    shifts = resident['shifts']
-    try:
-        for shift in shifts:
-            shiftData = rotsQualDict[shift]
-            shiftScore = 0
-            shiftScore += shiftData[score]
-        resident[score] = shiftScore
-        resident['missing'] = 0
-    except KeyError:
-        resident[score] = 0
-        resident['missing'] = 1
-    dayList.append(resident)
-dayScore = 0
-for resident in dayList:
-    dayScore += resident[score]
-allDays[lookUp.keys()[0]] = {'dayScore' : dayScore, 'data' :dayList}
+    lookUp = amionLookup(AmionNames, htmlI)
+    data = lookUp.values()[0]
+    dayList = []
+    for resident in data:
+        shifts = resident['shifts']
+        try:
+            for shift in shifts:
+                shiftData = rotsQualDict[shift]
+                shiftScore = 0
+                shiftScore += shiftData[score]
+            resident[score] = shiftScore
+            resident['missing'] = 0
+        except KeyError:
+            resident[score] = 0
+            resident['missing'] = 1
+        dayList.append(resident)
+    dayScore = 0
+    for resident in dayList:
+        dayScore += resident[score]
+    allDays[lookUp.keys()[0]] = {'dayScore' : dayScore, 'data' :dayList}
 #print allDays
 # {'2016-01-10': {'dayScore': -1, 'data': [{'shifts': ['UCW3-Day'], 'score': -1,
 # 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0,
 # 'AmionName': 'Wu-L', 'missing': 1}]}}
 
-nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
-se = re.findall(nextDay, html, re.M)
-# print se[0]
+    tracker = tracker + increment # Don't lose. Tracks date, break while loop.
 
-# Functional code to iterate the next day:
-r2 = requests.get(str(baseUrl + se[0]))
-html2 = r2.content
-# print html2
 
-AmionName2 = 'Brim-R'
-print amionLookup(AmionName2, html2)
-'''
-
+print allDays
 
 
 # Date range loop ends here
