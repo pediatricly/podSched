@@ -48,7 +48,7 @@ scoreDict = {
 csvIn = 'rotationsQual.csv'
 csvOut = 'candidates.csv'
 #################################################################################
-endDate = DT.date(2016,1,15)
+endDate = DT.date(2016,1,21)
 startDate = DT.date.today()
 today = DT.date.today()
 fallYear = 2013
@@ -63,11 +63,12 @@ tracker = startDate
 days = (endDate - startDate)
 increment = DT.timedelta(days=1)
 
-AmionNames = ['Sun-V', 'Wu-L']
+weekendsOK = 1
+AmionNames = ['Sun-V', 'Emmott-M', 'Steinberg-E']
 allDays = {}
-candidates = 4
+candidates = 20
 
-
+dayScoreN = 'dayScore'
 score = 'score'
 
 #################################################################################
@@ -200,7 +201,7 @@ while tracker < endDate:
     dayScore = 0
     for resident in dayList:
         dayScore += resident[score]
-    allDays[lookUp.keys()[0]] = {'dayScore' : dayScore, 'data' :dayList}
+    allDays[lookUp.keys()[0]] = {dayScoreN : dayScore, 'data' :dayList}
 #################################################################################
 
     tracker = tracker + increment # Don't lose. Tracks date, break while loop.
@@ -219,7 +220,7 @@ while tracker < endDate:
 ### Score impossible for vacation days
 #################################################################################
 
-vacationInput = '(1/1,1/12) (2/1,2/14)' # Will want to make this raw_input
+vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
 vacInputGroups = re.findall('\((.*?)\)', vacationInput, re.M)
 vacTupules = []
 for vac in vacInputGroups:
@@ -244,26 +245,31 @@ for vac in vacInputGroups:
 for vac in vacTupules:
     for day in allDays:
         if day > vac[0] and day <= vac[1]:
-            allDays[day]['dayScore'] += -2
+            allDays[day][dayScoreN] += -2
 
 fh = open(csvOut, 'wb')
 csvwriter = csv.writer(fh, quotechar=' ')
-csvwriter.writerow(['date', 'dayOfWeek', 'dayScore'])
+csvwriter.writerow(['date', 'dayOfWeek', dayScoreN])
 counter = 0
-for day in sorted(allDays.items(), key=lambda x: x[1]['dayScore'],
+for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
                   reverse=True):
-    if counter < candidates:
-        row = [day[0].isoformat(), day[0].strftime('%a'), day[1]['dayScore']]
-        for i in range(len(AmionNames)):
-            row.append(day[1]['data'][i]['AmionName'])
-            row.append(str(day[1]['data'][i]['shifts']))
-        print row
-        csvwriter.writerow(row)
-    counter +=1
+    if counter >= candidates:
+        break
+    else:
+        if weekendsOK == 0 and day[0].weekday() > 4:
+                continue
+        else:
+            row = [day[0].isoformat(), day[0].strftime('%a'), day[1][dayScoreN]]
+            for i in range(len(AmionNames)):
+                row.append(day[1]['data'][i]['AmionName'])
+                row.append(str(day[1]['data'][i]['shifts']))
+            print row
+            csvwriter.writerow(row)
+        counter +=1
 fh.close()
     # print str(day) + ' ' + str(allDaysSample[day]['dayScore'])
 '''
-allDaysSample[day]['dayScore'] returns the score
+allDaysSample[day][dayScoreN] returns the score
 '''
 
 
