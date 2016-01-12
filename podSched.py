@@ -46,6 +46,7 @@ scoreDict = {
 }
 
 csvIn = 'rotationsQual.csv'
+csvOut = 'candidates.csv'
 #################################################################################
 endDate = DT.date(2016,1,15)
 startDate = DT.date.today()
@@ -64,11 +65,11 @@ increment = DT.timedelta(days=1)
 
 AmionNames = ['Sun-V', 'Wu-L']
 allDays = {}
-
+candidates = 4
 
 
 score = 'score'
-'''
+
 #################################################################################
 #####   Scraper Module
 ##### Look up the schedule in Amion and put rotations in a list
@@ -121,7 +122,7 @@ def amionLookup(AmName, htmli):
     # ['2016-01-10', 'Sun, Jan 10, 2016', [{'shifts': ['UCW3-Day'], 'AmionName':
     # 'Sun-V'}, {'shifts': ['Not Found'], 'AmionName': 'Wu-L'}]]
 
-    return {pyDate.isoformat() : outList}
+    return {pyDate : outList}
 ###################################################################
 ### Read the CSV list from active dir
 ### This should contain shiftName, cleanRotName, quality, night
@@ -206,20 +207,19 @@ while tracker < endDate:
 
 ######### End Loop ##############################################################
 
-print allDays
-'''
+# print allDays
 # {'2016-01-10': {'dayScore': -1, 'data': [{'shifts': ['UCW3-Day'], 'score': -1,
 # 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0,
 # 'AmionName': 'Wu-L', 'missing': 1}]}}
 
 # In case you need it for offline work:
-allDaysSample = {'2016-01-13': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-12': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-15': {'dayScore': -2, 'data': [{'shifts': ['UCW3-Nite'], 'score': -2, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-14': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}}
+# allDaysSample = {'2016-01-13': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-12': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-15': {'dayScore': -2, 'data': [{'shifts': ['UCW3-Nite'], 'score': -2, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-14': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}}
 
 #################################################################################
 ### Score impossible for vacation days
 #################################################################################
 
-vacationInput = '(1/1,1/12) (1/1,2/14)'
+vacationInput = '(1/1,1/12) (2/1,2/14)' # Will want to make this raw_input
 vacInputGroups = re.findall('\((.*?)\)', vacationInput, re.M)
 vacTupules = []
 for vac in vacInputGroups:
@@ -238,16 +238,30 @@ for vac in vacInputGroups:
     dateTupule = (startDate, endDate)
     vacTupules.append(dateTupule)
 
-for day in allDaysSample:
-    print allDaysSample[day]['dayScore']
+# for day in allDaysSample:
+#     print allDaysSample[day]['dayScore']
 
 for vac in vacTupules:
-    for day in allDaysSample:
-        if day > vac[0].isoformat() and day <= vac[1].isoformat():
-            allDaysSample[day]['dayScore'] += -2
+    for day in allDays:
+        if day > vac[0] and day <= vac[1]:
+            allDays[day]['dayScore'] += -2
 
-for day in allDaysSample:
-    print day + ' ' + str(allDaysSample[day]['dayScore'])
+fh = open(csvOut, 'wb')
+csvwriter = csv.writer(fh, quotechar=' ')
+csvwriter.writerow(['date', 'dayOfWeek', 'dayScore'])
+counter = 0
+for day in sorted(allDays.items(), key=lambda x: x[1]['dayScore'],
+                  reverse=True):
+    if counter < candidates:
+        row = [day[0].isoformat(), day[0].strftime('%a'), day[1]['dayScore']]
+        for i in range(len(AmionNames)):
+            row.append(day[1]['data'][i]['AmionName'])
+            row.append(str(day[1]['data'][i]['shifts']))
+        print row
+        csvwriter.writerow(row)
+    counter +=1
+fh.close()
+    # print str(day) + ' ' + str(allDaysSample[day]['dayScore'])
 '''
 allDaysSample[day]['dayScore'] returns the score
 '''
