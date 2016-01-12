@@ -1,6 +1,21 @@
 date,dayOfWeek,dayScore,postCall,Sun-V,Emmott-M,Steinberg-E
-2016-01-12,Tue,-2,0,ORANGE3-Day,BMT, KW  Int-Short 
-2016-01-13,Wed,-2,0,ORANGE3-Day,BMT, KW  Int-Short 
-2016-01-16,Sat,-2,2, Not  Found , Not  Found , Not  Found 
-2016-01-14,Thu,-3,0,ORANGE3-Day,BMT,KWInt-Long
-2016-01-15,Fri,-5,0,UCW3-Nite,BMTRedBMT-Nite,KWInt-Long
+2016-02-25,Thu,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-01-21,Thu,1,0, Not  Found , Not  Found ,KWInt-Short
+2016-03-08,Tue,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-03-10,Thu,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-02-23,Tue,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-03-01,Tue,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-01-22,Fri,1,0, Not  Found , Not  Found ,KWInt-Short
+2016-02-26,Fri,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-02-24,Wed,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-03-09,Wed,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-03-11,Fri,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-02-16,Tue,1,0,SFO-SCR, Not  Found , Not  Found 
+2016-03-02,Wed,0,0, Not  Found , Not  Found , Not  Found 
+2016-01-19,Tue,0,0, Not  Found , Not  Found , Not  Found 
+2016-02-29,Mon,0,0, Not  Found , Not  Found , Not  Found 
+2016-02-19,Fri,0,0, Not  Found , Not  Found , Not  Found 
+2016-02-17,Wed,0,0, Not  Found , Not  Found , Not  Found 
+2016-01-29,Fri,0,1, Not  Found , Not  Found ,KWInt-Short
+2016-03-07,Mon,0,0, Not  Found , Not  Found , Not  Found 
+2016-03-04,Fri,0,0, Not  Found , Not  Found , Not  Found 

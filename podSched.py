@@ -57,9 +57,9 @@ postCallN = 'postCall'
 csvIn = 'rotationsQual.csv'
 csvOut = 'candidates.csv'
 #################################################################################
-endDate = DT.date(2016,1,16)
+endDate = DT.date(2016,3,31)
 startDate = DT.date.today() # Default to search from today, can make raw-input
-weekendsOK = 1
+weekendsOK = 0
 AmionNames = ['Sun-V', 'Emmott-M', 'Steinberg-E']
 candidates = 20
 vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
@@ -217,6 +217,8 @@ while tracker < endDate:
 
     tracker = tracker + increment # Don't lose. Tracks date, break while loop.
 
+for day in allDays:
+    print allDays[day]['postCall']
 ######### End Loop ##############################################################
 
 # print allDays
@@ -230,14 +232,17 @@ while tracker < endDate:
 #################################################################################
 ### Count & score the next day for post-call residents
 #################################################################################
-postCallDay = 0
 for day in allDays:
+    postCallDay = 0
     postDay = day + increment
     try:
         for i in range(len(AmionNames)):
             if allDays[day][dataN][i][nightN] == 1:
                 postCallDay += 1
+                print allDays[day][dataN][i]['shifts']
+                print postDay
         if postCallDay > 0:
+            print postCallDay
             allDays[postDay][dayScoreN] += (scoreDict[postCallN] * postCallDay)
             allDays[postDay][postCallN] = postCallDay
     except KeyError: pass
