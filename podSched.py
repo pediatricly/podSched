@@ -15,6 +15,8 @@ Build plan:
     That tomorrow url is what gets fed into the start of the loop.
     - vacation adjuster
     - rank & output
+
+11jan16: It all works!
 '''
 
 #===============================================================================
@@ -42,14 +44,27 @@ scoreDict = {
     'good' : 1,
     'ok' : 0,
     'bad' : -1,
-    'impossible' : -2
+    'impossible' : -2,
+    'postCall' : -1
 }
+allDays = {}
+dayScoreN = 'dayScore'
+dataN = 'data'
+score = 'score'
+nightN = 'night'
+postCallN = 'postCall'
 
 csvIn = 'rotationsQual.csv'
 csvOut = 'candidates.csv'
 #################################################################################
-endDate = DT.date(2016,1,21)
-startDate = DT.date.today()
+endDate = DT.date(2016,1,16)
+startDate = DT.date.today() # Default to search from today, can make raw-input
+weekendsOK = 1
+AmionNames = ['Sun-V', 'Emmott-M', 'Steinberg-E']
+candidates = 20
+vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
+
+###### Basic Date Calculations ##################################################
 today = DT.date.today()
 fallYear = 2013
 springYear = 2014
@@ -63,13 +78,6 @@ tracker = startDate
 days = (endDate - startDate)
 increment = DT.timedelta(days=1)
 
-weekendsOK = 1
-AmionNames = ['Sun-V', 'Emmott-M', 'Steinberg-E']
-allDays = {}
-candidates = 20
-
-dayScoreN = 'dayScore'
-score = 'score'
 
 #################################################################################
 #####   Scraper Module
@@ -192,16 +200,19 @@ while tracker < endDate:
                 shiftData = rotsQualDict[shift]
                 shiftScore = 0
                 shiftScore += shiftData[score]
+                if shiftData[nightN] == '1': resident[nightN] = 1
+                else: resident[nightN] = 0
             resident[score] = shiftScore
             resident['missing'] = 0
         except KeyError:
             resident[score] = 0
             resident['missing'] = 1
+            resident[nightN] = 0
         dayList.append(resident)
     dayScore = 0
     for resident in dayList:
         dayScore += resident[score]
-    allDays[lookUp.keys()[0]] = {dayScoreN : dayScore, 'data' :dayList}
+    allDays[lookUp.keys()[0]] = {dayScoreN : dayScore, postCallN : 0, 'data' :dayList}
 #################################################################################
 
     tracker = tracker + increment # Don't lose. Tracks date, break while loop.
@@ -217,10 +228,23 @@ while tracker < endDate:
 # allDaysSample = {'2016-01-13': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-12': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-15': {'dayScore': -2, 'data': [{'shifts': ['UCW3-Nite'], 'score': -2, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-14': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}}
 
 #################################################################################
+### Count & score the next day for post-call residents
+#################################################################################
+postCallDay = 0
+for day in allDays:
+    postDay = day + increment
+    try:
+        for i in range(len(AmionNames)):
+            if allDays[day][dataN][i][nightN] == 1:
+                postCallDay += 1
+        if postCallDay > 0:
+            allDays[postDay][dayScoreN] += (scoreDict[postCallN] * postCallDay)
+            allDays[postDay][postCallN] = postCallDay
+    except KeyError: pass
+#################################################################################
 ### Score impossible for vacation days
 #################################################################################
 
-vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
 vacInputGroups = re.findall('\((.*?)\)', vacationInput, re.M)
 vacTupules = []
 for vac in vacInputGroups:
@@ -239,17 +263,19 @@ for vac in vacInputGroups:
     dateTupule = (startDate, endDate)
     vacTupules.append(dateTupule)
 
-# for day in allDaysSample:
-#     print allDaysSample[day]['dayScore']
-
 for vac in vacTupules:
     for day in allDays:
         if day > vac[0] and day <= vac[1]:
             allDays[day][dayScoreN] += -2
 
+#################################################################################
+### Rank by score, write to csv
+#################################################################################
 fh = open(csvOut, 'wb')
 csvwriter = csv.writer(fh, quotechar=' ')
-csvwriter.writerow(['date', 'dayOfWeek', dayScoreN])
+outHeaders = ['date', 'dayOfWeek', dayScoreN, postCallN]
+for res in AmionNames: outHeaders.append(res)
+csvwriter.writerow(outHeaders)
 counter = 0
 for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
                   reverse=True):
@@ -259,15 +285,19 @@ for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
         if weekendsOK == 0 and day[0].weekday() > 4:
                 continue
         else:
-            row = [day[0].isoformat(), day[0].strftime('%a'), day[1][dayScoreN]]
+            row = [day[0].isoformat(), day[0].strftime('%a'), day[1][dayScoreN],
+                   day[1][postCallN]]
             for i in range(len(AmionNames)):
-                row.append(day[1]['data'][i]['AmionName'])
-                row.append(str(day[1]['data'][i]['shifts']))
+                # row.append(day[1]['data'][i]['AmionName'])
+                shiftStr = ''
+                for shift in day[1]['data'][i]['shifts']:
+                    shiftStr += shift
+                row.append(shiftStr)
             print row
             csvwriter.writerow(row)
         counter +=1
 fh.close()
-    # print str(day) + ' ' + str(allDaysSample[day]['dayScore'])
+
 '''
 allDaysSample[day][dayScoreN] returns the score
 '''
