@@ -25,7 +25,6 @@ import os.path
 import urllib
 import string
 import datetime as DT
-
 ###################################################################
 ### Define Globals Before Main try block
 ###################################################################
@@ -37,8 +36,39 @@ fieldnames = ['AmionRot', 'cleanRotName', 'Milestone Map Label']
 residentD = {}
 rotationsDict = {}
 
+headers = []
+rotsQualDict = {}
+scoreDict = {
+    'good' : 1,
+    'ok' : 0,
+    'bad' : -1,
+    'impossible' : -2
+}
+
+csvIn = 'rotationsQual.csv'
+#################################################################################
+endDate = DT.date(2016,1,15)
+startDate = DT.date.today()
+today = DT.date.today()
+fallYear = 2013
+springYear = 2014
+if today.month > 6:
+    fallYear = int(today.year)
+    springYear = fallYear + 1
+else:
+    springYear = int(today.year)
+    fallYear = springYear -1
+tracker = startDate
+days = (endDate - startDate)
+increment = DT.timedelta(days=1)
+
+AmionNames = ['Sun-V', 'Wu-L']
+allDays = {}
 
 
+
+score = 'score'
+'''
 #################################################################################
 #####   Scraper Module
 ##### Look up the schedule in Amion and put rotations in a list
@@ -97,16 +127,6 @@ def amionLookup(AmName, htmli):
 ### This should contain shiftName, cleanRotName, quality, night
 ###################################################################
 
-headers = []
-rotsQualDict = {}
-scoreDict = {
-    'good' : 1,
-    'ok' : 0,
-    'bad' : -1,
-    'impossible' : -2
-}
-
-csvIn = 'rotationsQual.csv'
 fh = open(csvIn, 'rb')
 csvreader = csv.reader(fh, quotechar=' ')
 for i, row in enumerate(csvreader):
@@ -116,7 +136,6 @@ shiftName = headers[0]
 cleanRotName = headers[1]
 quality = headers[2]
 night = headers[3]
-score = 'score'
 fh.close()
 
 fh = open(csvIn, 'rb')
@@ -133,30 +152,35 @@ fh.close()
 # PURPLE1-Day': {'score': -1, 'quality': 'bad', 'night': ''},}
 
 #################################################################################
-endDate = DT.date(2016,1,15)
-startDate = DT.date.today()
-tracker = startDate
-days = (endDate - startDate)
-increment = DT.timedelta(days=1)
-
-AmionNames = ['Sun-V', 'Wu-L']
-allDays = {}
-
+### Setup Amion loop by going to landing page & finding first Next Day link
+#################################################################################
 baseUrl = "http://amion.com/cgi-bin/ocs"
 AmionLogin = {"login" : "ucsfpeds"}
 req0 = requests.post(baseUrl, data=AmionLogin)
 # print(r.text) # This is outputting the html of the actual schedule landing page
 html = req0.content # And this stores that html as a string
 nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
+# This finds suffix of Next Day link from Amion landing page. Returns a list,
+# hopefully len=1, so stores index 0 to pass into the while loop:
 nextLink = re.findall(nextDay, html, re.M)[0]
 
-# Date range loop starts here:
+#################################################################################
+### Loop through Amion lookups day-by-day from tomorrow till endDate
+#################################################################################
 while tracker < endDate:
     reqI = requests.get(baseUrl + nextLink)
     htmlI = reqI.content
-    nextLink = re.findall(nextDay, htmlI, re.M)[0]
-
-    lookUp = amionLookup(AmionNames, htmlI)
+    nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
+    lookUp = amionLookup(AmionNames, htmlI) # Lookup date & shift given AmionNames
+#################################################################################
+# This section sets up the data analysis & is what changes for different
+# applications of AmionLookup.
+# In general, by day, it looks up the shift the database (read from csv above)
+# and outputs some dict with data
+# Could rewrite just to store the daily data & do the lookup in a separate loop.
+# I thought the single loop might be a little fast for big searches.
+# Other uses: lookup conference expectations by shift & store by resident / by
+# month for conference tracker
     data = lookUp.values()[0]
     dayList = []
     for resident in data:
@@ -176,24 +200,57 @@ while tracker < endDate:
     for resident in dayList:
         dayScore += resident[score]
     allDays[lookUp.keys()[0]] = {'dayScore' : dayScore, 'data' :dayList}
-#print allDays
+#################################################################################
+
+    tracker = tracker + increment # Don't lose. Tracks date, break while loop.
+
+######### End Loop ##############################################################
+
+print allDays
+'''
 # {'2016-01-10': {'dayScore': -1, 'data': [{'shifts': ['UCW3-Day'], 'score': -1,
 # 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0,
 # 'AmionName': 'Wu-L', 'missing': 1}]}}
 
-    tracker = tracker + increment # Don't lose. Tracks date, break while loop.
+# In case you need it for offline work:
+allDaysSample = {'2016-01-13': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-12': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-15': {'dayScore': -2, 'data': [{'shifts': ['UCW3-Nite'], 'score': -2, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-14': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}}
 
+#################################################################################
+### Score impossible for vacation days
+#################################################################################
 
-print allDays
+vacationInput = '(1/1,1/12) (1/1,2/14)'
+vacInputGroups = re.findall('\((.*?)\)', vacationInput, re.M)
+vacTupules = []
+for vac in vacInputGroups:
+    startDate = vac[:vac.find(',')]
+    moStart = int(startDate[:startDate.find('/')])
+    dayStart = int(startDate[vac.find('/')+1:])
+    endDate = vac[vac.find(',')+1:]
+    moEnd = int(endDate[:endDate.find('/')])
+    dayEnd = int(endDate[endDate.find('/')+1:])
+    if moStart > 6: yearStart = fallYear
+    else: yearStart = springYear
+    if moEnd > 6: yearEnd = fallYear
+    else: yearEnd = springYear
+    startDate = DT.date(yearStart, moStart, dayStart)
+    endDate = DT.date(yearEnd, moEnd, dayEnd)
+    dateTupule = (startDate, endDate)
+    vacTupules.append(dateTupule)
 
+for day in allDaysSample:
+    print allDaysSample[day]['dayScore']
 
-# Date range loop ends here
+for vac in vacTupules:
+    for day in allDaysSample:
+        if day > vac[0].isoformat() and day <= vac[1].isoformat():
+            allDaysSample[day]['dayScore'] += -2
 
-
-
-
-
-
+for day in allDaysSample:
+    print day + ' ' + str(allDaysSample[day]['dayScore'])
+'''
+allDaysSample[day]['dayScore'] returns the score
+'''
 
 
 
