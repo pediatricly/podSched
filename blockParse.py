@@ -17,7 +17,29 @@ header = search[0]
 main = search[1:]
 # for line in main:
 line = main[0]
-soup = bs(line)
+# soup = bs(line)
+
+# print line
+tar2 = '<td.+?</td>'
+se2 = re.findall(tar2, line, re.I)
+print len(se2)
+
+rowList = []
+for td in se2:
+    soup = bs(td)
+    if soup.string != None: rowList.append(soup.string)
+    else:
+        cellList = []
+        inners = soup.descendants
+        for el in inners:
+            if el.string == None: pass
+            else:
+                cellList.append(el.string)
+                rowList.append(cellList)
+
+for cell in rowList:
+    print cell
+
 '''
 # This works to get all the text but it loses the cell structure
 for string in soup.strings:
@@ -29,7 +51,7 @@ for string in soup.strings:
 # cell = td1.string
 # print cell #Ainsworth-A
 
-
+'''
 rowList = []
 # print soup
 el1 = soup.td
@@ -44,6 +66,7 @@ else:
     pass
 print nextTag
 print rowList
+'''
 '''
 This has been an hellish nightmare, but I think I'm on the right track. I
 really need to walk through the table 1 tag at a time (in a loop).
@@ -61,6 +84,11 @@ tag.descendents == None if there's only text in the tag
 
 bs4 examples use nested for loops to descend through tags until one reaches
 descendents == None
+
+Actually, what might work even more easily is a combo re + bs
+for line (ie row), can re search for <td.+?</td>  That will get the whole tag
+Can pass that tag as a soup object and grab all the strings either in bulk, doing a
+find_all(True) or whatever.
 '''
 
 
