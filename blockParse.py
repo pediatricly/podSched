@@ -58,6 +58,7 @@ import re
 import csv
 import string
 from bs4 import BeautifulSoup as bs
+import datetime as DT
 #################################################################################
 ### Globals & Setup
 #################################################################################
@@ -83,7 +84,9 @@ se2 = re.findall(tar2, line, re.I)
 rowList = []
 for td in se2:
     soup = bs(td)
-    if soup.string != None: rowList.append(soup.string)
+    if soup.string != None:
+        soupStr = soup.string
+        rowList.append(soupStr.encode('ascii','ignore'))
     else:
         cellList = []
         inners = soup.descendants # Got to use descendants, not children or
@@ -99,8 +102,77 @@ for td in se2:
             else: newList.append(item.strip())
         rowList.append(newList)
 
-for cell in rowList:
-    print cell
+# for cell in rowList:
+#     print cell
+
+blockStarts = {
+    1: DT.date(2015, 7, 1),
+    2: DT.date(2015, 8, 3),
+    3: DT.date(2015, 8, 31),
+    4: DT.date(2015, 9, 28),
+    5: DT.date(2015, 10, 26),
+    6: DT.date(2015, 11, 23),
+    7: DT.date(2015, 12, 21),
+    8: DT.date(2016, 1, 18),
+    9: DT.date(2016, 2, 15),
+    10: DT.date(2016, 3, 14),
+    11: DT.date(2016, 4, 11),
+    12: DT.date(2016, 5, 9),
+    13: DT.date(2016, 6, 6)}
+
+# blockStops = {
+#     1: DT.date(2015, 7, 1),
+#     2: DT.date(2015, 8, 3),
+#     3: DT.date(2015, 8, 31),
+#     4: DT.date(2015, 9, 28),
+#     5: DT.date(2015, 10, 26),
+#     6: DT.date(2015, 11, 23),
+#     7: DT.date(2015, 12, 21),
+#     8: DT.date(2016, 1, 18),
+#     9: DT.date(2016, 2, 15),
+#     10: DT.date(2016, 3, 14),
+#     11: DT.date(2016, 4, 11),
+#     12: DT.date(2016, 5, 9),
+#     13: DT.date(2016, 6, 6)}
+
+AmionName = rowList.pop(0)
+if AmionName[-1].isalpha() == False:
+    AmionName = AmionName[:-1]
+
+week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
+CoCRaw = rowList.pop(13)
+CoCweekDayStr = CoCRaw[:3]
+CoCTime = CoCRaw[3:5]
+CoCLoc = CoCRaw[5:]
+CoCweekDay = week[CoCweekDayStr]
+
+CoCDict = {'weekday' : CoCweekDay,
+           'weekdayStr' : CoCweekDayStr,
+           'time' : CoCTime,
+           'location' : CoCLoc}
+resDict = {'AmionName' : AmionName,
+           'schedule' : [],
+           'CoC' : CoCDict}
+
+for i, item in enumerate(rowList):
+    schedDict = {}
+    if type(item) == str:
+        schedDict['block'] = i+1
+        schedDict['startDate'] = blockStarts[i+1]
+        try:
+            schedDict['stopDate'] = blockStarts[i+2] + DT.timedelta(days=-1)
+        except KeyError:
+            schedDict['stopDate'] = DT.date(blockStarts[1].year +1, 6, 30)
+# CAREFUL- this doesn't account for intern week off etc. Best to make a
+# blockStops dict
+        schedDict['rotation'] = item
+    elif type(item) == list: pass
+# Here's where you parse those lists into dicts
+
+    resDict['schedule'].append(schedDict)
+
+print resDict
+
 '''
 List of the table row's cells where multipart cells are list items.
 Ainsworth-A=
@@ -117,7 +189,6 @@ PURPLE3
 ['VAC', '5/2-5/8', 'CHO-ICU']
 ICN3
 Chief
-Wed pm CARDS
 '''
 
 #################################################################################
