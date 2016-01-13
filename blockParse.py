@@ -1,9 +1,66 @@
 #! /usr/bin/python
 
+'''
+Plan (not flow)
+- Finish the cell parsing - getting close. Next task is to read the multipart
+cells. Bottom line is assumed to be month minus date range in top lines.
+If bottom line has a |, block is split in half. Those halves may be broken by
+top lines.
+-
+- Build the outer loop to loop through all the lines of the table (easy)
+- Build separate but similar top loop that reads the table date ranges from
+first row
+- At some point, use str.isalpha() to strip the =,-,* crap off AmionName
+
+Then, for reals - ponder the data structure you want. Maybe:
+{name : AmionN-F,
+ schedule : [
+    {block : 9,
+     startDate : 2016,3,7,
+     stopDate : 2016,3,13,
+     rotation : 'VAC'},
+    {block : 9,
+     startDate: 2016,3,14,
+     stop...
+    }],
+ CoC :
+     {weekday : 2
+     weekdayStr : 'Wed'
+     time: 'pm'
+     location: 'CARDS'}
+}
+
+This setup preserves an index for sub-rotations because they are in a list.
+But it allows multiple to have the same block attribute.
+
+This would be a good time to put classes to use. Should define a resYear class
+for the top level (a table row), a rotation class with those specific data types
+and a CoC class with those.
+
+- And eventually figure out how to crawl through Amion.
+Can use re to get the block link from landing page.
+Jumping through classes needs a post method:
+    This got from R3 (default from landing page) to R2
+File:!12e0dde3hucsf_peds
+Page:Block
+Sbcid:6
+Skill:2
+Rsel:-1
+Blks:0-0
+
+I think I can put that in a dict & pass it in a post, but I am not sure where
+that file name is store. I don't see it in the html. Seems to come from a js
+onChange="document.GetPage.submit();" which must be from a separate .js file
+
+'''
+#################################################################################
 import re
 import csv
 import string
 from bs4 import BeautifulSoup as bs
+#################################################################################
+### Globals & Setup
+#################################################################################
 
 blockHTML = 'blockR3.html'
 fh = open(blockHTML, 'rb')
@@ -22,7 +79,6 @@ line = main[0]
 # print line
 tar2 = '<td.+?</td>'
 se2 = re.findall(tar2, line, re.I)
-print len(se2)
 
 rowList = []
 for td in se2:
@@ -30,16 +86,43 @@ for td in se2:
     if soup.string != None: rowList.append(soup.string)
     else:
         cellList = []
-        inners = soup.descendants
+        inners = soup.descendants # Got to use descendants, not children or
+        # findall here - those leave out some uncolored text
         for el in inners:
             if el.string == None: pass
             else:
-                cellList.append(el.string)
-                rowList.append(cellList)
+                elStr = el.string
+                cellList.append(elStr.encode('ascii','ignore'))
+        newList = []
+        for i, item in enumerate(cellList):
+            if item == cellList[i-1]: pass
+            else: newList.append(item.strip())
+        rowList.append(newList)
 
 for cell in rowList:
     print cell
+'''
+List of the table row's cells where multipart cells are list items.
+Ainsworth-A=
+E-CICU
+PICU3
+SFN3
+['VAC', '| SFX']
+SFO3
+SFO3
+PURPLE3
+PURPLE3
+['VAC', '3/7-3/13', 'JEOP | E-Pulm']
+['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
+['VAC', '5/2-5/8', 'CHO-ICU']
+ICN3
+Chief
+Wed pm CARDS
+'''
 
+#################################################################################
+### Failed bs experiments
+#################################################################################
 '''
 # This works to get all the text but it loses the cell structure
 for string in soup.strings:
