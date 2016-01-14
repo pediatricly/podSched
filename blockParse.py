@@ -2,41 +2,45 @@
 
 '''
 Plan (not flow)
-- Finish the cell parsing - getting close. Next task is to read the multipart
-cells. Bottom line is assumed to be month minus date range in top lines.
-If bottom line has a |, block is split in half. Those halves may be broken by
-top lines.
--
+#- Finish the cell parsing - getting close. Next task is to read the multipart
+#cells. Bottom line is assumed to be month minus date range in top lines.
+#If bottom line has a |, block is split in half. Those halves may be broken by
+#top lines.
+#-
+#- Build separate but similar top loop that reads the table date ranges from
+#first row
+#- At some point, use str.isalpha() to strip the =,-,* crap off AmionName
+#
+#Then, for reals - ponder the data structure you want. Maybe:
+#{name : AmionN-F,
+# schedule : [
+#    {block : 9,
+#     startDate : 2016,3,7,
+#     stopDate : 2016,3,13,
+#     rotation : 'VAC'},
+#    {block : 9,
+#     startDate: 2016,3,14,
+#     stop...
+#    }],
+# CoC :
+#     {weekday : 2
+#     weekdayStr : 'Wed'
+#     time: 'pm'
+#     location: 'CARDS'}
+#}
+#
+#This setup preserves an index for sub-rotations because they are in a list.
+#But it allows multiple to have the same block attribute.
+#
+#This would be a good time to put classes to use. Should define a resYear class
+#for the top level (a table row), a rotation class with those specific data types
+#and a CoC class with those.
+
+**NEXT**
+- Figure out the top level data structure: list of dicts, move AmionName out to
+be the key of the top level dict? (Probably doesn't matter much)
+Either way, group by class so R3s = {} or []
 - Build the outer loop to loop through all the lines of the table (easy)
-- Build separate but similar top loop that reads the table date ranges from
-first row
-- At some point, use str.isalpha() to strip the =,-,* crap off AmionName
-
-Then, for reals - ponder the data structure you want. Maybe:
-{name : AmionN-F,
- schedule : [
-    {block : 9,
-     startDate : 2016,3,7,
-     stopDate : 2016,3,13,
-     rotation : 'VAC'},
-    {block : 9,
-     startDate: 2016,3,14,
-     stop...
-    }],
- CoC :
-     {weekday : 2
-     weekdayStr : 'Wed'
-     time: 'pm'
-     location: 'CARDS'}
-}
-
-This setup preserves an index for sub-rotations because they are in a list.
-But it allows multiple to have the same block attribute.
-
-This would be a good time to put classes to use. Should define a resYear class
-for the top level (a table row), a rotation class with those specific data types
-and a CoC class with those.
-
 - And eventually figure out how to crawl through Amion.
 Can use re to get the block link from landing page.
 Jumping through classes needs a post method:
@@ -63,64 +67,104 @@ import datetime as DT
 ### Globals & Setup
 #################################################################################
 
+week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 blockHTML = 'blockR3.html'
 fh = open(blockHTML, 'rb')
 html = fh.read()
+blockStarts = {}
+blockStops = {}
 
 target = '^<TR.+?</tr>'
-search = re.findall(target, html, re.M)
-# print search[0]
+TDtar = '<td.+?</td>'
+#################################################################################
+### Parser Function
+# Takes list of <td></td> cells from re.findall
+# Outputs list len= # table columns with each item corresponding to 1 cell
+# For cells with multiple internal tags, returns all text in a list within list
+# Also: cleans out duplicates strings, white space & converts everything to
+# ASCII (ignores other unicode characters
+#################################################################################
+def rowParser(seList):
+    rowList = []
+    for td in seList:
+        soup = bs(td)
+        if soup.string != None:
+            soupStr = soup.string
+            rowList.append(soupStr.encode('ascii','ignore'))
+        else:
+            cellList = []
+            inners = soup.descendants # Got to use descendants, not children or
+            # findall here - those leave out some uncolored text
+            for el in inners:
+                if el.string == None: pass
+                else:
+                    elStr = el.string
+                    cellList.append(elStr.encode('ascii','ignore'))
+            newList = []
+            for i, item in enumerate(cellList):
+                if item == cellList[i-1]: pass
+                else: newList.append(item.strip())
+            rowList.append(newList)
+    return rowList
+#################################################################################
+yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
+years = re.search(yearTar, html, re.I)
+fallYr = int(years.group(1))
+springYr = int(years.group(2))
 
-header = search[0]
-main = search[1:]
-# for line in main:
-line = main[0]
-# soup = bs(line)
+# re to find the whole table (assumes there's only 1 on the html page
+table = re.findall(target, html, re.M)
 
-# print line
-tar2 = '<td.+?</td>'
-se2 = re.findall(tar2, line, re.I)
+#################################################################################
+### Read the headers to get block start-stop dates
+#################################################################################
+header = table[0]
+seHead = re.findall(TDtar, header, re.I)
 
-rowList = []
-for td in se2:
-    soup = bs(td)
-    if soup.string != None:
-        soupStr = soup.string
-        rowList.append(soupStr.encode('ascii','ignore'))
-    else:
-        cellList = []
-        inners = soup.descendants # Got to use descendants, not children or
-        # findall here - those leave out some uncolored text
-        for el in inners:
-            if el.string == None: pass
-            else:
-                elStr = el.string
-                cellList.append(elStr.encode('ascii','ignore'))
-        newList = []
-        for i, item in enumerate(cellList):
-            if item == cellList[i-1]: pass
-            else: newList.append(item.strip())
-        rowList.append(newList)
+headDates = rowParser(seHead)
+headDates.pop(0)
+headDates.pop()
 
-# for cell in rowList:
-#     print cell
+for cell in headDates:
+    block = int(cell[0])
+    datesRaw = cell[1]
+    datesSplit = datesRaw.split('-')
+    startD = datesSplit[0]
+    startSplit = startD.split('/')
+    startNums = []
+    for num in startSplit:
+        numInt = int(num)
+        startNums.append(numInt)
+    #for num in startNums:
+    if startNums[0] > 6: yearI = fallYr
+    else: yearI = springYr
+    blockStarts[block] = DT.date(yearI, startNums[0], startNums[1])
 
-blockStarts = {
-    1: DT.date(2015, 7, 1),
-    2: DT.date(2015, 8, 3),
-    3: DT.date(2015, 8, 31),
-    4: DT.date(2015, 9, 28),
-    5: DT.date(2015, 10, 26),
-    6: DT.date(2015, 11, 23),
-    7: DT.date(2015, 12, 21),
-    8: DT.date(2016, 1, 18),
-    9: DT.date(2016, 2, 15),
-    10: DT.date(2016, 3, 14),
-    11: DT.date(2016, 4, 11),
-    12: DT.date(2016, 5, 9),
-    13: DT.date(2016, 6, 6)}
+    stopD = datesSplit[1]
+    stopSplit = stopD.split('/')
+    stopNums = []
+    for num in stopSplit:
+        numInt = int(num)
+        stopNums.append(numInt)
+    #for num in stopNums:
+    if stopNums[0] > 6: yearI = fallYr
+    else: yearI = springYr
+    blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
 
-# blockStops = {
+#    1: DT.date(2015, 7, 1),
+#    2: DT.date(2015, 8, 3),
+#    3: DT.date(2015, 8, 31),
+#    4: DT.date(2015, 9, 28),
+#    5: DT.date(2015, 10, 26),
+#    6: DT.date(2015, 11, 23),
+#    7: DT.date(2015, 12, 21),
+#    8: DT.date(2016, 1, 18),
+#    9: DT.date(2016, 2, 15),
+#    10: DT.date(2016, 3, 14),
+#    11: DT.date(2016, 4, 11),
+#    12: DT.date(2016, 5, 9),
+#    13: DT.date(2016, 6, 6)}
+
 #     1: DT.date(2015, 7, 1),
 #     2: DT.date(2015, 8, 3),
 #     3: DT.date(2015, 8, 31),
@@ -134,13 +178,25 @@ blockStarts = {
 #     11: DT.date(2016, 4, 11),
 #     12: DT.date(2016, 5, 9),
 #     13: DT.date(2016, 6, 6)}
+#################################################################################
+### Read the main (residents) part of the table
+#################################################################################
 
-AmionName = rowList.pop(0)
+main = table[1:]
+# for line in main:
+# This is where to build the loop for all resident lines eventually
+line = main[0]
+se2 = re.findall(TDtar, line, re.I)
+
+rowListI = rowParser(se2)
+# for cell in rowListI:
+#     print cell
+
+AmionName = rowListI.pop(0)
 if AmionName[-1].isalpha() == False:
     AmionName = AmionName[:-1]
 
-week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
-CoCRaw = rowList.pop(13)
+CoCRaw = rowListI.pop(13)
 CoCweekDayStr = CoCRaw[:3]
 CoCTime = CoCRaw[3:5]
 CoCLoc = CoCRaw[5:]
@@ -154,15 +210,15 @@ resDict = {'AmionName' : AmionName,
            'schedule' : [],
            'CoC' : CoCDict}
 
-for i, item in enumerate(rowList):
+for i, item in enumerate(rowListI):
     schedDict = {}
     if type(item) == str:
         schedDict['block'] = i+1
         schedDict['startDate'] = blockStarts[i+1]
         try:
-            schedDict['stopDate'] = blockStarts[i+2] + DT.timedelta(days=-1)
+            schedDict['stopDate'] = blockStops[i+1]
         except KeyError:
-            schedDict['stopDate'] = DT.date(blockStarts[1].year +1, 6, 30)
+            schedDict['stopDate'] = blockStops[13] + DT.timedelta(days=1)
 # CAREFUL- this doesn't account for intern week off etc. Best to make a
 # blockStops dict
         schedDict['rotation'] = item
@@ -319,3 +375,4 @@ seem to be in font or nobr tags.
 I think if I search for all 3 tags, store them in order by resident & then
 merge them together, it should work.
 '''
+fh.close()
