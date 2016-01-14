@@ -106,6 +106,7 @@ def rowParser(seList):
                 else: newList.append(item.strip())
             rowList.append(newList)
     return rowList
+
 #################################################################################
 yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
 years = re.search(yearTar, html, re.I)
@@ -151,33 +152,6 @@ for cell in headDates:
     else: yearI = springYr
     blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
 
-#    1: DT.date(2015, 7, 1),
-#    2: DT.date(2015, 8, 3),
-#    3: DT.date(2015, 8, 31),
-#    4: DT.date(2015, 9, 28),
-#    5: DT.date(2015, 10, 26),
-#    6: DT.date(2015, 11, 23),
-#    7: DT.date(2015, 12, 21),
-#    8: DT.date(2016, 1, 18),
-#    9: DT.date(2016, 2, 15),
-#    10: DT.date(2016, 3, 14),
-#    11: DT.date(2016, 4, 11),
-#    12: DT.date(2016, 5, 9),
-#    13: DT.date(2016, 6, 6)}
-
-#     1: DT.date(2015, 7, 1),
-#     2: DT.date(2015, 8, 3),
-#     3: DT.date(2015, 8, 31),
-#     4: DT.date(2015, 9, 28),
-#     5: DT.date(2015, 10, 26),
-#     6: DT.date(2015, 11, 23),
-#     7: DT.date(2015, 12, 21),
-#     8: DT.date(2016, 1, 18),
-#     9: DT.date(2016, 2, 15),
-#     10: DT.date(2016, 3, 14),
-#     11: DT.date(2016, 4, 11),
-#     12: DT.date(2016, 5, 9),
-#     13: DT.date(2016, 6, 6)}
 #################################################################################
 ### Read the main (residents) part of the table
 #################################################################################
@@ -206,12 +180,14 @@ CoCDict = {'weekday' : CoCweekDay,
            'weekdayStr' : CoCweekDayStr,
            'time' : CoCTime,
            'location' : CoCLoc}
-resDict = {'AmionName' : AmionName,
+resDict = {AmionName : {
            'schedule' : [],
-           'CoC' : CoCDict}
+           'CoC' : CoCDict}}
 
 for i, item in enumerate(rowListI):
     schedDict = {}
+    schedDictB1 = {}
+    schedDictB2 = {}
     if type(item) == str:
         schedDict['block'] = i+1
         schedDict['startDate'] = blockStarts[i+1]
@@ -219,13 +195,87 @@ for i, item in enumerate(rowListI):
             schedDict['stopDate'] = blockStops[i+1]
         except KeyError:
             schedDict['stopDate'] = blockStops[13] + DT.timedelta(days=1)
-# CAREFUL- this doesn't account for intern week off etc. Best to make a
-# blockStops dict
         schedDict['rotation'] = item
-    elif type(item) == list: pass
+    elif type(item) == list:
+        length = len(item)
+        bottom = item[length - 1]
+        if bottom[0] == '|': bottom = item[length-2] + ' ' + bottom
+        if '|' in bottom:
+            bottoms = bottom.split(' | ')
+# Parse the bottom row
+            schedDictB1['block'] = i+1
+            schedDictB1['startDate'] = blockStarts[i+1]
+            schedDictB1['stopDate'] = blockStarts[i+1] + DT.timedelta(days=13)
+            schedDictB1['rotation'] = bottoms[0]
+            schedDictB2['block'] = i+1
+            schedDictB2['startDate'] = blockStarts[i+1] + DT.timedelta(days=14)
+            schedDictB2['stopDate'] = blockStarts[i+2] + DT.timedelta(days=-1)
+            schedDictB2['rotation'] = bottoms[1]
+            resDict[AmionName]['schedule'].append(schedDictB1)
+            resDict[AmionName]['schedule'].append(schedDictB2)
+            item.pop(length - 1)
+        '''
+        This is close to working, but it hasn't solved the complex in-cell dates
+        problem. Right now, it's double booking for those.
+        I think I need to do a tree of if statements. Move this date parsing for
+        B to the end of the loop (below this for loop) & only run that if there
+        is no top line(s).
+        If there is/are top lines, keep the bottom name parsing but do if
+        statements through the dates using the dict lookups to get all the dates
+        & rotations in the same list so they can be sorted out.
+
+        Actually, no, you can keep those but don't append to resDict yet.
+        - Start assuming the bottoms fill the month then clip away by iterating
+        through. Maybe?
+        - Look at Rachel's block 1. She's the most complex case with only 1
+        thing in bottom and 3 upper lines.
+        I dunno. It's a complex mess. Maybe you should just toss all dates &
+        rotations into sets and sort them independently. But look at Alanna
+        block 1. She has E-Sed in 2 pieces.
+        White board it before coding or you'll go mad.
+
+        Or maybe adjusting resDict after the fact is the way to go. You would
+        however, have to encode a bottom flag so you know which is the parent
+        rotation that has to adjust size.
+        As I think about it, I think that's the way to go. Structuring that as
+        a loop will require some thought. I think it needs an outer loop that
+        iterates through the list, then inner loops that compare the startDate
+        to every other start date, then the stopDate to every other stopDate:
+            for rotation in resDict:
+                startD = rotation['startDate']
+                for others in resDict:
+                    if others['startDate'] == startD: something
+            This may require popping rotations on the fly temporarily to avoid
+            comparing to self or just saying if rotation['rotation'] ==: pass
+        '''
+        for j, other in enumerate(item):
+            schedDictO = {}
+            if other[0].isdigit() == True:
+                weekRot = item[j-1]
+                dates = other.split('-')
+                startDO = dates[0]
+                startDOs = startDO.split('/')
+                startDOmo = int(startDOs[0])
+                if startDOmo > 6: startDOYr = fallYr
+                else: startDOYr = springYr
+                startDOday = int(startDOs[1])
+
+                stopDO = dates[1]
+                stopDOs = stopDO.split('/')
+                stopDOmo = int(stopDOs[0])
+                if stopDOmo > 6: stopDOYr = fallYr
+                else: stopDOYr = springYr
+                stopDOday = int(stopDOs[1])
+                schedDictO['block'] = i+1
+                schedDictO['startDate'] = DT.date(startDOYr, startDOmo, startDOday)
+                schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo, stopDOday)
+                schedDictO['rotation'] = weekRot
+                resDict[AmionName]['schedule'].append(schedDictO)
+
+
 # Here's where you parse those lists into dicts
 
-    resDict['schedule'].append(schedDict)
+    resDict[AmionName]['schedule'].append(schedDict)
 
 print resDict
 

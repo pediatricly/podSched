@@ -168,8 +168,10 @@ baseUrl = "http://amion.com/cgi-bin/ocs"
 AmionLogin = {"login" : "ucsfpeds"}
 req0 = requests.post(baseUrl, data=AmionLogin)
 # print(r.text) # This is outputting the html of the actual schedule landing page
+
 html = req0.content # And this stores that html as a string
 nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
+
 # This finds suffix of Next Day link from Amion landing page. Returns a list,
 # hopefully len=1, so stores index 0 to pass into the while loop:
 nextLink = re.findall(nextDay, html, re.M)[0]
@@ -182,6 +184,7 @@ while tracker < endDate:
     htmlI = reqI.content
     nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
     lookUp = amionLookup(AmionNames, htmlI) # Lookup date & shift given AmionNames
+
 #################################################################################
 # This section sets up the data analysis & is what changes for different
 # applications of AmionLookup.
