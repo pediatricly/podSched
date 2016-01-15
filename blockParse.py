@@ -90,6 +90,7 @@ def rowParser(seList):
         soup = bs(td)
         if soup.string != None:
             soupStr = soup.string
+            # Append single entry cells (blocks)
             rowList.append(soupStr.encode('ascii','ignore'))
         else:
             cellList = []
@@ -100,9 +101,11 @@ def rowParser(seList):
                 else:
                     elStr = el.string
                     cellList.append(elStr.encode('ascii','ignore'))
+            # newList just gets stripped strings
             newList = []
             for i, item in enumerate(cellList):
                 newList.append(item.strip())
+            # newList2 clears out dups. Top lines must be followed by dates
             newList2 = []
             for i, item in enumerate(newList):
                 if i < (len(newList)-1):
@@ -110,10 +113,12 @@ def rowParser(seList):
                     else: newList2.append(item)
                 else: newList2.append(item)
 
+            #Append multipart cells
             rowList.append(newList2)
     return rowList
 
 #################################################################################
+# Find the years from the Amion block page
 yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
 years = re.search(yearTar, html, re.I)
 fallYr = int(years.group(1))
@@ -142,7 +147,6 @@ for cell in headDates:
     for num in startSplit:
         numInt = int(num)
         startNums.append(numInt)
-    #for num in startNums:
     if startNums[0] > 6: yearI = fallYr
     else: yearI = springYr
     blockStarts[block] = DT.date(yearI, startNums[0], startNums[1])
@@ -153,7 +157,6 @@ for cell in headDates:
     for num in stopSplit:
         numInt = int(num)
         stopNums.append(numInt)
-    #for num in stopNums:
     if stopNums[0] > 6: yearI = fallYr
     else: yearI = springYr
     blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
@@ -165,12 +168,29 @@ for cell in headDates:
 main = table[1:]
 # for line in main:
 # This is where to build the loop for all resident lines eventually
-line = main[2]
+line = main[7]
 se2 = re.findall(TDtar, line, re.I)
 
 rowListI = rowParser(se2)
 for cell in rowListI:
     print cell
+'''
+List of the table row's cells where multipart cells are list items.
+Ainsworth-A=
+E-CICU
+PICU3
+SFN3
+['VAC', '| SFX']
+SFO3
+SFO3
+PURPLE3
+PURPLE3
+['VAC', '3/7-3/13', 'JEOP | E-Pulm']
+['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
+['VAC', '5/2-5/8', 'CHO-ICU']
+ICN3
+Chief
+'''
 
 AmionName = rowListI.pop(0)
 if AmionName[-1].isalpha() == False:
@@ -206,36 +226,52 @@ for i, item in enumerate(rowListI):
         schedDict['bottom'] = 1
     elif type(item) == list:
         length = len(item)
-        bottom = item[length - 1]
-        for j, other in enumerate(item):
-            schedDictO = {}
-            if other[0].isdigit() == True:
-                weekRot = item[j-1]
-                dates = other.split('-')
-                startDO = dates[0]
-                startDOs = startDO.split('/')
-                startDOmo = int(startDOs[0])
-                if startDOmo > 6: startDOYr = fallYr
-                else: startDOYr = springYr
-                startDOday = int(startDOs[1])
+        # bottom = item[length - 1]
+        lastTop = ''
+        # Find the dates that mark the line between tops & bottoms
+        for j, string in enumerate(item):
+            if string[0].isdigit() == True and string[-1].isdigit() == True:
+                lastTop = int(j)
+        # If there is a top line, parse it & save bottom for loop below
+        if lastTop != '':
+            tops = item[:lastTop+1]
+            print tops
+            bottomRow = item[lastTop+1:]
 
-                stopDO = dates[1]
-                stopDOs = stopDO.split('/')
-                stopDOmo = int(stopDOs[0])
-                if stopDOmo > 6: stopDOYr = fallYr
-                else: stopDOYr = springYr
-                stopDOday = int(stopDOs[1])
-                schedDictO['block'] = i+1
-                schedDictO['startDate'] = DT.date(startDOYr, startDOmo, startDOday)
-                schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo, stopDOday)
-                schedDictO['rotation'] = weekRot
-                schedDictO['bottom'] = 0
-                if schedDictO != {}:
-                    resDict[AmionName]['schedule'].append(schedDictO)
-        if bottom[0] == '|': bottom = item[length-2] + ' ' + bottom
+            # Parse the tops into a dict
+            for j, other in enumerate(tops):
+                schedDictO = {}
+                if other[0].isdigit() == True:
+                    weekRot = item[j-1]
+                    dates = other.split('-')
+                    startDO = dates[0]
+                    startDOs = startDO.split('/')
+                    startDOmo = int(startDOs[0])
+                    if startDOmo > 6: startDOYr = fallYr
+                    else: startDOYr = springYr
+                    startDOday = int(startDOs[1])
+
+                    stopDO = dates[1]
+                    stopDOs = stopDO.split('/')
+                    stopDOmo = int(stopDOs[0])
+                    if stopDOmo > 6: stopDOYr = fallYr
+                    else: stopDOYr = springYr
+                    stopDOday = int(stopDOs[1])
+                    schedDictO['block'] = i+1
+                    schedDictO['startDate'] = DT.date(startDOYr, startDOmo, startDOday)
+                    schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo, stopDOday)
+                    schedDictO['rotation'] = weekRot
+                    schedDictO['bottom'] = 0
+                    if schedDictO != {}:
+                        resDict[AmionName]['schedule'].append(schedDictO)
+        # If there's no top line, the whole cell, [a list], is the bottom row
+        else: bottomRow = item
+
+        # Parse the bottom row. Start by concatenating if not already
+        if len(bottomRow) > 1: bottom = ' '.join(bottomRow)
+        else: bottom = bottomRow[0]
         if '|' in bottom:
             bottoms = bottom.split(' | ')
-# Parse the bottom row
             schedDictB1['block'] = i+1
             schedDictB1['startDate'] = blockStarts[i+1]
             schedDictB1['stopDate'] = blockStarts[i+1] + DT.timedelta(days=13)
@@ -259,7 +295,6 @@ for i, item in enumerate(rowListI):
     if schedDict != {}:
         resDict[AmionName]['schedule'].append(schedDict)
 
-
 '''
 This is getting close to working! It handles Ainsworth & Arora's schedules but
 fails on Balkin.
@@ -272,6 +307,12 @@ where they may be discontinuous.
 print len(resDict[AmionName]['schedule'])
 for rot in  resDict[AmionName]['schedule']:
     print rot
+
+'''
+This is the active end from 15jan. As above, I think the solution is to get all
+the dates in a data structure and plug any gaps with the bottoms. This is a
+little complex with split bottoms, hence the if, elifs started below
+
 
 for number in range(12,13):
     cellBlock = []
@@ -299,56 +340,16 @@ for number in range(12,13):
     # elif len(cellBottoms) == 2:
 
     else: print 'wtf'
-
+'''
 
 print ''
-'''
-This is the output from that loop:
-[datetime.date(2016, 5, 2), datetime.date(2016, 5, 8)]
-[]
-[datetime.date(2016, 5, 9), datetime.date(2016, 5, 15)]
-[]
-[datetime.date(2016, 5, 30), datetime.date(2016, 6, 5)]
-[]
-Looks like cellBottoms is empty every time which definitely should not be
-happening, but I ain't sure why yet.
-'''
 
-'''
-if rotation['bottom'] == 0:
-startD = rotation['startDate']
-stopD = rotation['stopDate']
-block = rotation['block']
-for rot2 in resDict[AmionName]['schedule']:
-    if rot2['bottom'] == 1 and block == rot2['block']:
-        if rot2['startDate'] == startD: pass
-        elif rot2['startDate'] < startD and rot2['stopDate'] >= stopD:
-            # print rotation
-            rot2['stopDate'] = startD - DT.timedelta(days=1)
-        # elif rot['startDate']
-'''
+
 # print resDict
 # print len(resDict[AmionName]['schedule'])
 # for rot in  resDict[AmionName]['schedule']:
     # print rot
 
-'''
-List of the table row's cells where multipart cells are list items.
-Ainsworth-A=
-E-CICU
-PICU3
-SFN3
-['VAC', '| SFX']
-SFO3
-SFO3
-PURPLE3
-PURPLE3
-['VAC', '3/7-3/13', 'JEOP | E-Pulm']
-['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
-['VAC', '5/2-5/8', 'CHO-ICU']
-ICN3
-Chief
-'''
 
 #################################################################################
 ### Failed bs experiments
