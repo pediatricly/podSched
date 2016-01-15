@@ -102,8 +102,8 @@ def rowParser(seList):
                     cellList.append(elStr.encode('ascii','ignore'))
             newList = []
             for i, item in enumerate(cellList):
-                if item == cellList[i-1]: pass
-                else: newList.append(item.strip())
+                newList.append(item.strip())
+            # if item == cellList[i-1]: pass
             rowList.append(newList)
     return rowList
 
@@ -159,12 +159,12 @@ for cell in headDates:
 main = table[1:]
 # for line in main:
 # This is where to build the loop for all resident lines eventually
-line = main[0]
+line = main[2]
 se2 = re.findall(TDtar, line, re.I)
 
 rowListI = rowParser(se2)
-# for cell in rowListI:
-#     print cell
+for cell in rowListI:
+    print cell
 
 AmionName = rowListI.pop(0)
 if AmionName[-1].isalpha() == False:
@@ -186,6 +186,7 @@ resDict = {AmionName : {
 
 for i, item in enumerate(rowListI):
     schedDict = {}
+    schedDictB = {}
     schedDictB1 = {}
     schedDictB2 = {}
     if type(item) == str:
@@ -196,9 +197,35 @@ for i, item in enumerate(rowListI):
         except KeyError:
             schedDict['stopDate'] = blockStops[13] + DT.timedelta(days=1)
         schedDict['rotation'] = item
+        schedDict['bottom'] = 1
     elif type(item) == list:
         length = len(item)
         bottom = item[length - 1]
+        for j, other in enumerate(item):
+            schedDictO = {}
+            if other[0].isdigit() == True:
+                weekRot = item[j-1]
+                dates = other.split('-')
+                startDO = dates[0]
+                startDOs = startDO.split('/')
+                startDOmo = int(startDOs[0])
+                if startDOmo > 6: startDOYr = fallYr
+                else: startDOYr = springYr
+                startDOday = int(startDOs[1])
+
+                stopDO = dates[1]
+                stopDOs = stopDO.split('/')
+                stopDOmo = int(stopDOs[0])
+                if stopDOmo > 6: stopDOYr = fallYr
+                else: stopDOYr = springYr
+                stopDOday = int(stopDOs[1])
+                schedDictO['block'] = i+1
+                schedDictO['startDate'] = DT.date(startDOYr, startDOmo, startDOday)
+                schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo, stopDOday)
+                schedDictO['rotation'] = weekRot
+                schedDictO['bottom'] = 0
+                if schedDictO != {}:
+                    resDict[AmionName]['schedule'].append(schedDictO)
         if bottom[0] == '|': bottom = item[length-2] + ' ' + bottom
         if '|' in bottom:
             bottoms = bottom.split(' | ')
@@ -207,15 +234,80 @@ for i, item in enumerate(rowListI):
             schedDictB1['startDate'] = blockStarts[i+1]
             schedDictB1['stopDate'] = blockStarts[i+1] + DT.timedelta(days=13)
             schedDictB1['rotation'] = bottoms[0]
+            schedDictB1['bottom'] = 1
             schedDictB2['block'] = i+1
             schedDictB2['startDate'] = blockStarts[i+1] + DT.timedelta(days=14)
             schedDictB2['stopDate'] = blockStarts[i+2] + DT.timedelta(days=-1)
             schedDictB2['rotation'] = bottoms[1]
+            schedDictB2['bottom'] = 1
             resDict[AmionName]['schedule'].append(schedDictB1)
             resDict[AmionName]['schedule'].append(schedDictB2)
             item.pop(length - 1)
-        '''
-        This is close to working, but it hasn't solved the complex in-cell dates
+        else:
+            schedDictB['block'] = i+1
+            schedDictB['startDate'] = blockStarts[i+1]
+            schedDictB['stopDate'] = blockStops[i+1]
+            schedDictB['rotation'] = bottom
+            schedDictB['bottom'] = 1
+            resDict[AmionName]['schedule'].append(schedDictB)
+    if schedDict != {}:
+        resDict[AmionName]['schedule'].append(schedDict)
+
+
+'''
+This is getting close to working! It handles Ainsworth & Arora's schedules but
+fails on Balkin.
+I think I should re-do all the date change logic before & take advantage of the
+block #. Get all the block numbers together and slide the bottom around to fill
+the gaps, including to create a new bottom entry for rare, but possible cases
+where they may be discontinuous.
+'''
+
+#print len(resDict[AmionName]['schedule'])
+#for rot in  resDict[AmionName]['schedule']:
+#    print rot
+
+for rotation in resDict[AmionName]['schedule']:
+    if rotation['bottom'] == 0:
+        startD = rotation['startDate']
+        stopD = rotation['stopDate']
+        block = rotation['block']
+        for rot2 in resDict[AmionName]['schedule']:
+            if rot2['bottom'] == 1 and block == rot2['block']:
+                if rot2['startDate'] == startD: pass
+                elif rot2['startDate'] < startD and rot2['stopDate'] >= stopD:
+                    # print rotation
+                    rot2['stopDate'] = startD - DT.timedelta(days=1)
+                # elif rot['startDate']
+
+print resDict
+print len(resDict[AmionName]['schedule'])
+for rot in  resDict[AmionName]['schedule']:
+    print rot
+
+'''
+List of the table row's cells where multipart cells are list items.
+Ainsworth-A=
+E-CICU
+PICU3
+SFN3
+['VAC', '| SFX']
+SFO3
+SFO3
+PURPLE3
+PURPLE3
+['VAC', '3/7-3/13', 'JEOP | E-Pulm']
+['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
+['VAC', '5/2-5/8', 'CHO-ICU']
+ICN3
+Chief
+'''
+
+#################################################################################
+### Failed bs experiments
+#################################################################################
+'''
+This is close to working, but it hasn't solved the complex in-cell dates
         problem. Right now, it's double booking for those.
         I think I need to do a tree of if statements. Move this date parsing for
         B to the end of the loop (below this for loop) & only run that if there
@@ -247,60 +339,6 @@ for i, item in enumerate(rowListI):
                     if others['startDate'] == startD: something
             This may require popping rotations on the fly temporarily to avoid
             comparing to self or just saying if rotation['rotation'] ==: pass
-        '''
-        for j, other in enumerate(item):
-            schedDictO = {}
-            if other[0].isdigit() == True:
-                weekRot = item[j-1]
-                dates = other.split('-')
-                startDO = dates[0]
-                startDOs = startDO.split('/')
-                startDOmo = int(startDOs[0])
-                if startDOmo > 6: startDOYr = fallYr
-                else: startDOYr = springYr
-                startDOday = int(startDOs[1])
-
-                stopDO = dates[1]
-                stopDOs = stopDO.split('/')
-                stopDOmo = int(stopDOs[0])
-                if stopDOmo > 6: stopDOYr = fallYr
-                else: stopDOYr = springYr
-                stopDOday = int(stopDOs[1])
-                schedDictO['block'] = i+1
-                schedDictO['startDate'] = DT.date(startDOYr, startDOmo, startDOday)
-                schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo, stopDOday)
-                schedDictO['rotation'] = weekRot
-                resDict[AmionName]['schedule'].append(schedDictO)
-
-
-# Here's where you parse those lists into dicts
-
-    resDict[AmionName]['schedule'].append(schedDict)
-
-print resDict
-
-'''
-List of the table row's cells where multipart cells are list items.
-Ainsworth-A=
-E-CICU
-PICU3
-SFN3
-['VAC', '| SFX']
-SFO3
-SFO3
-PURPLE3
-PURPLE3
-['VAC', '3/7-3/13', 'JEOP | E-Pulm']
-['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
-['VAC', '5/2-5/8', 'CHO-ICU']
-ICN3
-Chief
-'''
-
-#################################################################################
-### Failed bs experiments
-#################################################################################
-'''
 # This works to get all the text but it loses the cell structure
 for string in soup.strings:
     print string
