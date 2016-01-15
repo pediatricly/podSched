@@ -103,8 +103,14 @@ def rowParser(seList):
             newList = []
             for i, item in enumerate(cellList):
                 newList.append(item.strip())
-            # if item == cellList[i-1]: pass
-            rowList.append(newList)
+            newList2 = []
+            for i, item in enumerate(newList):
+                if i < (len(newList)-1):
+                    if item == newList[i+1]: pass
+                    else: newList2.append(item)
+                else: newList2.append(item)
+
+            rowList.append(newList2)
     return rowList
 
 #################################################################################
@@ -263,27 +269,68 @@ the gaps, including to create a new bottom entry for rare, but possible cases
 where they may be discontinuous.
 '''
 
-#print len(resDict[AmionName]['schedule'])
-#for rot in  resDict[AmionName]['schedule']:
-#    print rot
-
-for rotation in resDict[AmionName]['schedule']:
-    if rotation['bottom'] == 0:
-        startD = rotation['startDate']
-        stopD = rotation['stopDate']
-        block = rotation['block']
-        for rot2 in resDict[AmionName]['schedule']:
-            if rot2['bottom'] == 1 and block == rot2['block']:
-                if rot2['startDate'] == startD: pass
-                elif rot2['startDate'] < startD and rot2['stopDate'] >= stopD:
-                    # print rotation
-                    rot2['stopDate'] = startD - DT.timedelta(days=1)
-                # elif rot['startDate']
-
-print resDict
 print len(resDict[AmionName]['schedule'])
 for rot in  resDict[AmionName]['schedule']:
     print rot
+
+for number in range(12,13):
+    cellBlock = []
+    cellTops = []
+    cellBottoms = []
+    blockStart = blockStarts[number]
+    blockStop = blockStops[number]
+    topDates = []
+    for rotation in resDict[AmionName]['schedule']:
+        if rotation['block'] == number:
+            if rotation['bottom'] == 1:
+                cellBottoms.append(rotation)
+            elif rotation['bottom'] == 0:
+                cellTops.append(rotation)
+            for top in cellTops:
+                print top
+                topDates.append(top['startDate'])
+                topDates.append(top['stopDate'])
+    if len(topDates) > 0:
+        print topDates
+        print cellTops
+        print cellBottoms
+    # if len(cellBottoms) == 1:
+
+    # elif len(cellBottoms) == 2:
+
+    else: print 'wtf'
+
+
+print ''
+'''
+This is the output from that loop:
+[datetime.date(2016, 5, 2), datetime.date(2016, 5, 8)]
+[]
+[datetime.date(2016, 5, 9), datetime.date(2016, 5, 15)]
+[]
+[datetime.date(2016, 5, 30), datetime.date(2016, 6, 5)]
+[]
+Looks like cellBottoms is empty every time which definitely should not be
+happening, but I ain't sure why yet.
+'''
+
+'''
+if rotation['bottom'] == 0:
+startD = rotation['startDate']
+stopD = rotation['stopDate']
+block = rotation['block']
+for rot2 in resDict[AmionName]['schedule']:
+    if rot2['bottom'] == 1 and block == rot2['block']:
+        if rot2['startDate'] == startD: pass
+        elif rot2['startDate'] < startD and rot2['stopDate'] >= stopD:
+            # print rotation
+            rot2['stopDate'] = startD - DT.timedelta(days=1)
+        # elif rot['startDate']
+'''
+# print resDict
+# print len(resDict[AmionName]['schedule'])
+# for rot in  resDict[AmionName]['schedule']:
+    # print rot
 
 '''
 List of the table row's cells where multipart cells are list items.
