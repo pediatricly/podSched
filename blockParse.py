@@ -172,8 +172,8 @@ line = main[7]
 se2 = re.findall(TDtar, line, re.I)
 
 rowListI = rowParser(se2)
-for cell in rowListI:
-    print cell
+# for cell in rowListI:
+    # print cell
 '''
 List of the table row's cells where multipart cells are list items.
 Ainsworth-A=
@@ -235,7 +235,6 @@ for i, item in enumerate(rowListI):
         # If there is a top line, parse it & save bottom for loop below
         if lastTop != '':
             tops = item[:lastTop+1]
-            print tops
             bottomRow = item[lastTop+1:]
 
             # Parse the tops into a dict
@@ -295,42 +294,67 @@ for i, item in enumerate(rowListI):
     if schedDict != {}:
         resDict[AmionName]['schedule'].append(schedDict)
 
+# print len(resDict[AmionName]['schedule'])
+# for rot in  resDict[AmionName]['schedule']:
+    # print rot
+
+rowTops = []
+rowBottoms = []
+for rotation in resDict[AmionName]['schedule']:
+    if rotation['bottom'] == 1:
+        rowBottoms.append(rotation)
+    elif rotation['bottom'] == 0:
+        rowTops.append(rotation)
+
+for bottom in rowBottoms:
+    blockI = bottom['block']
+    botStart = bottom['startDate']
+    botStop = bottom['stopDate']
+    cellTops = []
+    topStarts = set()
+    topStops = set()
+    for top in rowTops:
+        if top['block'] == blockI:
+            cellTops.append(top)
+            topStarts.add(top['startDate'])
+            topStops.add(top['stopDate'])
+
+    posStarts = set()
+    posStops = set()
+    if len(cellTops) > 0:
+        for top in cellTops:
+            posStarts.add(top['startDate'])
+            if top['stopDate'] + DT.timedelta(days=1) < botStop:
+                posStarts.add(top['stopDate'] + DT.timedelta(days=1))
+            posStarts.add(botStart)
+            if top['startDate'] + DT.timedelta(days=-1) > botStart:
+                posStops.add(top['startDate'] + DT.timedelta(days=-1))
+            if top['stopDate'] < botStop:
+                posStops.add(top['stopDate'])
+            posStops.add(botStop)
+        print posStarts - topStarts
+        print posStops - topStops
+
 '''
-This is getting close to working! It handles Ainsworth & Arora's schedules but
-fails on Balkin.
-I think I should re-do all the date change logic before & take advantage of the
-block #. Get all the block numbers together and slide the bottom around to fill
-the gaps, including to create a new bottom entry for rare, but possible cases
-where they may be discontinuous.
+Working! I need to head to the strip club but this is basically solved. Those
+diff of sets statements at the bottom are the start & end dates the bottoms
+should be adjusted to.
+The only extra setp is to put in some logic that allows creation & append of a
+new "rotation" with same block & name but with the seond set of start/stop dates
+should they exist. (This is probably super rare but could become common in 6 wk
+blocks. Although, I think my cards rotation was discontinuous around PLUS?)
+
+**Actually, I bet it's easily solved using max / min functions.
+No, even better, just put all possible start dates in a list:
+    [bottom start date, top end dates + 1]
+    and whatever is not already a top start date is a bottom start date.
+    Then just sort out the rare situation where they may be discontinuous bottom
 '''
 
-print len(resDict[AmionName]['schedule'])
-for rot in  resDict[AmionName]['schedule']:
-    print rot
-
 '''
-This is the active end from 15jan. As above, I think the solution is to get all
-the dates in a data structure and plug any gaps with the bottoms. This is a
-little complex with split bottoms, hence the if, elifs started below
-
-
 for number in range(12,13):
     cellBlock = []
-    cellTops = []
-    cellBottoms = []
-    blockStart = blockStarts[number]
-    blockStop = blockStops[number]
     topDates = []
-    for rotation in resDict[AmionName]['schedule']:
-        if rotation['block'] == number:
-            if rotation['bottom'] == 1:
-                cellBottoms.append(rotation)
-            elif rotation['bottom'] == 0:
-                cellTops.append(rotation)
-            for top in cellTops:
-                print top
-                topDates.append(top['startDate'])
-                topDates.append(top['stopDate'])
     if len(topDates) > 0:
         print topDates
         print cellTops
@@ -341,7 +365,6 @@ for number in range(12,13):
 
     else: print 'wtf'
 '''
-
 print ''
 
 
