@@ -71,6 +71,7 @@ week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 blockHTML = 'blockR3.html'
 fh = open(blockHTML, 'rb')
 html = fh.read()
+fh.close()
 blockStarts = {}
 blockStops = {}
 
@@ -126,11 +127,11 @@ springYr = int(years.group(2))
 
 # re to find the whole table (assumes there's only 1 on the html page
 table = re.findall(target, html, re.M)
-
+header = table[0]
+main = table[1:]
 #################################################################################
 ### Read the headers to get block start-stop dates
 #################################################################################
-header = table[0]
 seHead = re.findall(TDtar, header, re.I)
 
 headDates = rowParser(seHead)
@@ -165,16 +166,18 @@ for cell in headDates:
 ### Read the main (residents) part of the table
 #################################################################################
 
-main = table[1:]
 # for line in main:
 # This is where to build the loop for all resident lines eventually
 line = main[7]
+
+# Grabs all the TD tags (cells) in the given row
 se2 = re.findall(TDtar, line, re.I)
 
+# Parses those TD tags into a list of block (cells) like the eg below
 rowListI = rowParser(se2)
+'''
 # for cell in rowListI:
     # print cell
-'''
 List of the table row's cells where multipart cells are list items.
 Ainsworth-A=
 E-CICU
@@ -192,16 +195,19 @@ ICN3
 Chief
 '''
 
+# Pop off the AmionName from the first cell of the row
 AmionName = rowListI.pop(0)
 if AmionName[-1].isalpha() == False:
     AmionName = AmionName[:-1]
 
+# Pop off & parse to dict the Coc date from the last cell
 CoCRaw = rowListI.pop(13)
 CoCweekDayStr = CoCRaw[:3]
 CoCTime = CoCRaw[3:5]
 CoCLoc = CoCRaw[5:]
 CoCweekDay = week[CoCweekDayStr]
 
+# Setup data structures for ea resident/row of the table
 CoCDict = {'weekday' : CoCweekDay,
            'weekdayStr' : CoCweekDayStr,
            'time' : CoCTime,
@@ -209,24 +215,45 @@ CoCDict = {'weekday' : CoCweekDay,
 resDict = {AmionName : {
            'schedule' : [],
            'CoC' : CoCDict}}
+schedule = []
+
+#################################################################################
+### This super complex loop parses that list of cells into a list of dicts with
+# all the schedule data by resident.
+# The first section is easy, parse the single rotation blocks.
+# The subsequent code parses the much trickier multi-rotation blocks using the
+# logic by which they are listed:
+# - Bottom row is the default rotation. It fills days not listed in top rows.
+# - If the bottom row is split ' | ', same rule applies but changes the bottom
+# rotation at mid-block,
+# - All the top rows take scehdule precedence and are assumed to be mutually
+# non-overlapping.
+# - Thus the bottoms have to adjust their start/stop dates to accomodate the
+# tops.
 
 for i, item in enumerate(rowListI):
+    # Setup empty dicts for each cell/item in the row
     schedDict = {}
     schedDictB = {}
     schedDictB1 = {}
     schedDictB2 = {}
+
+# Parse the easy, single rotation blocks - they are plain strings in rowList
     if type(item) == str:
         schedDict['block'] = i+1
         schedDict['startDate'] = blockStarts[i+1]
         try:
             schedDict['stopDate'] = blockStops[i+1]
+# Corrects lookup for the last block by going to the end of the year
         except KeyError:
             schedDict['stopDate'] = blockStops[13] + DT.timedelta(days=1)
         schedDict['rotation'] = item
-        schedDict['bottom'] = 1
+        schedDict['bottom'] = 1 # All these are "bottoms" ie default rotations
+
+# cells that are list are multirotation blocks. May be just split bottoms or
+# bottom and top(s)
     elif type(item) == list:
         length = len(item)
-        # bottom = item[length - 1]
         lastTop = ''
         # Find the dates that mark the line between tops & bottoms
         for j, string in enumerate(item):
@@ -257,18 +284,21 @@ for i, item in enumerate(rowListI):
                     else: stopDOYr = springYr
                     stopDOday = int(stopDOs[1])
                     schedDictO['block'] = i+1
-                    schedDictO['startDate'] = DT.date(startDOYr, startDOmo, startDOday)
-                    schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo, stopDOday)
+                    schedDictO['startDate'] = DT.date(startDOYr, startDOmo,
+                                                      startDOday)
+                    schedDictO['stopDate'] = DT.date(stopDOYr, stopDOmo,
+                                                     stopDOday)
                     schedDictO['rotation'] = weekRot
                     schedDictO['bottom'] = 0
                     if schedDictO != {}:
-                        resDict[AmionName]['schedule'].append(schedDictO)
+                        schedule.append(schedDictO)
         # If there's no top line, the whole cell, [a list], is the bottom row
         else: bottomRow = item
 
         # Parse the bottom row. Start by concatenating if not already
         if len(bottomRow) > 1: bottom = ' '.join(bottomRow)
         else: bottom = bottomRow[0]
+# If it is a split bottom, needs 2 dicts
         if '|' in bottom:
             bottoms = bottom.split(' | ')
             schedDictB1['block'] = i+1
@@ -281,26 +311,43 @@ for i, item in enumerate(rowListI):
             schedDictB2['stopDate'] = blockStarts[i+2] + DT.timedelta(days=-1)
             schedDictB2['rotation'] = bottoms[1]
             schedDictB2['bottom'] = 1
-            resDict[AmionName]['schedule'].append(schedDictB1)
-            resDict[AmionName]['schedule'].append(schedDictB2)
+            schedule.append(schedDictB1)
+            schedule.append(schedDictB2)
             item.pop(length - 1)
+# Non-split bottoms get a simple parsing
         else:
             schedDictB['block'] = i+1
             schedDictB['startDate'] = blockStarts[i+1]
             schedDictB['stopDate'] = blockStops[i+1]
             schedDictB['rotation'] = bottom
             schedDictB['bottom'] = 1
-            resDict[AmionName]['schedule'].append(schedDictB)
+            schedule.append(schedDictB)
     if schedDict != {}:
-        resDict[AmionName]['schedule'].append(schedDict)
+        schedule.append(schedDict)
 
 # print len(resDict[AmionName]['schedule'])
 # for rot in  resDict[AmionName]['schedule']:
     # print rot
 
+#################################################################################
+### Finally, adjust the bottoms' dates by the 'tops take precendence, bottoms
+# fill in the rest' rule.
+# Loop proceeds by blocks because nothing crosses block lines (rotations that
+# span blocks are listed twice).
+# I use sets for this as it fits the 'bottoms fill the rest' logic.
+# The last loop allows for discontinuous bottoms, where, say, someone is on Cards for the
+# month but has PLUS only in week 2. These are rare in 4wk blocks but may be
+# common in longer blocks. This loops over the bottoms, but the pos-dates sets
+# include all possible dates by blocks and puts start-stop dates together in
+# order, so this should allow for something like a 2-wk top that spans weeks 2 &
+# 3 in a split rotation block. (They don't seem to be encoding rotations this
+# way currently but could esp if blocks get longer.)
+
+# Start by grabbing all tops & bottoms (could have done this above but it's
+# messy enough)
 rowTops = []
 rowBottoms = []
-for rotation in resDict[AmionName]['schedule']:
+for rotation in schedule:
     if rotation['bottom'] == 1:
         rowBottoms.append(rotation)
     elif rotation['bottom'] == 0:
@@ -343,206 +390,18 @@ for bottom in rowBottoms:
                             'startDate' : remStarts[l],
                             'stopDate' : remStops[l],
                             'rotation' : bottom['rotation']}
-            resDict[AmionName]['schedule'].append(splitBottom)
+            schedule.append(splitBottom)
 
-
-'''
-Working! I need to head to the strip club but this is basically solved. Those
-diff of sets statements at the bottom are the start & end dates the bottoms
-should be adjusted to.
-The only extra setp is to put in some logic that allows creation & append of a
-new "rotation" with same block & name but with the seond set of start/stop dates
-should they exist. (This is probably super rare but could become common in 6 wk
-blocks. Although, I think my cards rotation was discontinuous around PLUS?)
-
-**Actually, I bet it's easily solved using max / min functions.
-No, even better, just put all possible start dates in a list:
-    [bottom start date, top end dates + 1]
-    and whatever is not already a top start date is a bottom start date.
-    Then just sort out the rare situation where they may be discontinuous bottom
-'''
-
-'''
-for number in range(12,13):
-    cellBlock = []
-    topDates = []
-    if len(topDates) > 0:
-        print topDates
-        print cellTops
-        print cellBottoms
-    # if len(cellBottoms) == 1:
-
-    # elif len(cellBottoms) == 2:
-
-    else: print 'wtf'
-'''
+# With all those adjustments done, re-sort the schedule list by start Dates
+sortSched = sorted(schedule, key=lambda k: k['startDate'])
+# Finally, put the sorted rotations list into the current resDict
+resDict[AmionName]['schedule'] = sortSched
 # print ''
 
 
-# print resDict
-print len(resDict[AmionName]['schedule'])
-for rot in  resDict[AmionName]['schedule']:
-    print rot
+print resDict
+# print len(resDict[AmionName]['schedule'])
+# for rot in  resDict[AmionName]['schedule']:
+    # print rot
 
 
-#################################################################################
-### Failed bs experiments
-#################################################################################
-'''
-This is close to working, but it hasn't solved the complex in-cell dates
-        problem. Right now, it's double booking for those.
-        I think I need to do a tree of if statements. Move this date parsing for
-        B to the end of the loop (below this for loop) & only run that if there
-        is no top line(s).
-        If there is/are top lines, keep the bottom name parsing but do if
-        statements through the dates using the dict lookups to get all the dates
-        & rotations in the same list so they can be sorted out.
-
-        Actually, no, you can keep those but don't append to resDict yet.
-        - Start assuming the bottoms fill the month then clip away by iterating
-        through. Maybe?
-        - Look at Rachel's block 1. She's the most complex case with only 1
-        thing in bottom and 3 upper lines.
-        I dunno. It's a complex mess. Maybe you should just toss all dates &
-        rotations into sets and sort them independently. But look at Alanna
-        block 1. She has E-Sed in 2 pieces.
-        White board it before coding or you'll go mad.
-
-        Or maybe adjusting resDict after the fact is the way to go. You would
-        however, have to encode a bottom flag so you know which is the parent
-        rotation that has to adjust size.
-        As I think about it, I think that's the way to go. Structuring that as
-        a loop will require some thought. I think it needs an outer loop that
-        iterates through the list, then inner loops that compare the startDate
-        to every other start date, then the stopDate to every other stopDate:
-            for rotation in resDict:
-                startD = rotation['startDate']
-                for others in resDict:
-                    if others['startDate'] == startD: something
-            This may require popping rotations on the fly temporarily to avoid
-            comparing to self or just saying if rotation['rotation'] ==: pass
-# This works to get all the text but it loses the cell structure
-for string in soup.strings:
-    print string
-'''
-
-# td1 = soup.td
-# print td1 # <td style="border-color:#cccccc; border-collapse:collapse;">Ainsworth-A=</td>
-# cell = td1.string
-# print cell #Ainsworth-A
-
-'''
-rowList = []
-# print soup
-el1 = soup.td
-print el1.name
-print type(el1)
-if el1.name == 'td': print el1.string
-children = el1.descendents
-if children == None:
-    rowList.append(el1.string)
-    nextTag = el1.next_sibling
-else:
-    pass
-print nextTag
-print rowList
-'''
-'''
-This has been an hellish nightmare, but I think I'm on the right track. I
-really need to walk through the table 1 tag at a time (in a loop).
-- Grab a tag in the row
-- If there's text in a td tag, keep that text
-- If there's not, grab the text from the descendent tags. These have no rhyme or
-reason, unfortunately. They are all over the place, font, nobr, b and often
-different fragments among them. It sucks bigtime. I don't know how to parse that
-text even after I get it.
-
-This code above is finally starting to come together. tag.name gives the html
-tag name (td, a, nobr, etc)
-tag.string is the text content but only of that tag, not its descendents
-tag.descendents == None if there's only text in the tag
-
-bs4 examples use nested for loops to descend through tags until one reaches
-descendents == None
-
-Actually, what might work even more easily is a combo re + bs
-for line (ie row), can re search for <td.+?</td>  That will get the whole tag
-Can pass that tag as a soup object and grab all the strings either in bulk, doing a
-find_all(True) or whatever.
-'''
-
-
-
-'''
-rowall = soup.find_all(['td']) #, 'font', 'nobr', 'b'])
-for tag in rowall:
-    # print type(tag)
-    if tag.contents != []: rowList.append(tag.contents[0])
-    else:
-        print tag
-        inner = tag.find_all(['font', 'nobr'])
-        print inner
-        #children = tag.descendants
-        #for child in children:
-        #    print child
-    #if tag.string != 'None': print tag.string
-    #else: "print miss"
-print rowList
-'''
-'''
-rowall = soup.find_all(['td', 'font', 'nobr', 'b'])
-# print rowall
-rowList = []
-for item in rowall:
-    if item[:2] == '<td': rowList.append(item.string)
-    if item.string == None: print 'line'
-'''
-'''
-for l in soup.findAll('td'):
-    if l.find('sup'):
-        l.find('sup').extract()
-    print l.getText(),'|',
-'''
-'''
-for i in range(15):
-    td2 = td1.next_element
-    print td2
-    td1 = td2
-'''
-'''
-# print (soup.prettify())
-tds = soup.find_all('td')
-# print tds
-print tds[0]
-
-tds2 = soup.td
-print type(tds2)
-print tds2
-print tds2.children
-for td in tds2:
-    print type(tds)
-    print td
-'''
-'''
-for i, cell in enumerate(tds):
-    tdList = []
-    print cell.contents
-    print cell.descendants
-'''
-'''
-tds = soup.findAll('font')
-for i, cell in enumerate(tds):
-    resList = []
-    print cell.string
-tds = soup.findAll('nobr')
-for i, cell in enumerate(tds):
-    resList = []
-    print cell.string
-'''
-'''
-This is great! Except it leaves out all those ridiculous split blocks. They
-seem to be in font or nobr tags.
-I think if I search for all 3 tags, store them in order by resident & then
-merge them together, it should work.
-'''
-fh.close()
