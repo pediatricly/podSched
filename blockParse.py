@@ -332,8 +332,19 @@ for bottom in rowBottoms:
             if top['stopDate'] < botStop:
                 posStops.add(top['stopDate'])
             posStops.add(botStop)
-        print posStarts - topStarts
-        print posStops - topStops
+        remStarts = sorted(list(posStarts - topStarts))
+        remStops = sorted(list(posStops - topStops))
+        bottom['startDate'] = remStarts[0]
+        bottom['stopDate'] = remStops[0]
+        if len(remStarts) > 1:
+            remStarts.pop(0)
+            for l, split in enumerate(remStarts):
+                splitBottom = {'block' : blockI,
+                            'startDate' : remStarts[l],
+                            'stopDate' : remStops[l],
+                            'rotation' : bottom['rotation']}
+            resDict[AmionName]['schedule'].append(splitBottom)
+
 
 '''
 Working! I need to head to the strip club but this is basically solved. Those
@@ -365,13 +376,13 @@ for number in range(12,13):
 
     else: print 'wtf'
 '''
-print ''
+# print ''
 
 
 # print resDict
-# print len(resDict[AmionName]['schedule'])
-# for rot in  resDict[AmionName]['schedule']:
-    # print rot
+print len(resDict[AmionName]['schedule'])
+for rot in  resDict[AmionName]['schedule']:
+    print rot
 
 
 #################################################################################
