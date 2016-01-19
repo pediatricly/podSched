@@ -65,6 +65,7 @@ import csv
 import string
 from bs4 import BeautifulSoup as bs
 import datetime as DT
+import json
 #################################################################################
 ### Parser Function
 # Takes list of <td></td> cells from re.findall
@@ -245,7 +246,6 @@ def cellListParser(rowListI):
         elif rotation['bottom'] == 0:
             rowTops.append(rotation)
 
-    adjSchedule = []
     for blockNum in range(1, lastBlock + 1):
         blockBottoms = []
         blockTops = []
@@ -274,8 +274,7 @@ def cellListParser(rowListI):
                         posStarts.add(rotation['stopDate'] + DT.timedelta(days=1))
                     if rotation['startDate'] + DT.timedelta(days=-1) > blockStarts[blockNum]:
                         posStops.add(rotation['startDate'] + DT.timedelta(days=-1))
-        # print posStarts
-        # print posStops
+
         # Only need to adjust the dates if there are tops. O/w dates should be
         # right from the split parsing. Hence the if len > 0:
         if len(blockTops) > 0:
@@ -283,8 +282,6 @@ def cellListParser(rowListI):
             if len(blockBottoms) == 1:
                 remStarts = sorted(list(posStarts - topStarts))
                 remStops = sorted(list(posStops - topStops))
-                # print remStarts
-                # print remStops
                 if len(remStarts) > 1:
                     blockBottoms[0]['startDate'] = remStarts[0]
                     blockBottoms[0]['stopDate'] = remStops[0]
@@ -299,14 +296,16 @@ def cellListParser(rowListI):
                 else:
                     blockBottoms[0]['startDate'] = remStarts[0]
                     blockBottoms[0]['stopDate'] = remStops[0]
-                    # adjSchedule.append(blockBottoms[0])
-            # These are blocks with 2 bottoms
+
+            # These are blocks with 2 bottoms:
+            # For these, need to split the date sets at the split, make 2 lists
+            # and do the whole date adjustment process twice
             elif len(blockBottoms) ==2:
-                # Find the split
                 posStarts1 = set()
                 posStarts2 = set()
                 posStops1 = set()
                 posStops2 = set()
+                # Find the split:
                 for date in posStarts:
                     if date < blockSplits[blockNum]: posStarts1.add(date)
                     else: posStarts2.add(date)
@@ -314,13 +313,13 @@ def cellListParser(rowListI):
                     if date <= blockSplits[blockNum]: posStops1.add(date)
                     else: posStops2.add(date)
 
+                # Get the diff of the sets. This does not create a 'negative date'
+                # for dates in the other half that are not in posSet
                 remStarts1 = sorted(list(posStarts1 - topStarts))
                 remStarts2 = sorted(list(posStarts2 - topStarts))
                 remStops1 = sorted(list(posStops1 - topStops))
                 remStops2 = sorted(list(posStops2 - topStops))
 
-                # print 'remStarts1: ', remStarts1
-                # print 'remstarts2: ', remStarts2
                 # Go through the date adjusting for first split
                 if len(remStarts1) > 2:
                     blockBottoms[0]['startDate'] = remStarts1[0]
@@ -336,13 +335,11 @@ def cellListParser(rowListI):
                 else:
                     blockBottoms[0]['startDate'] = remStarts1[0]
                     blockBottoms[0]['stopDate'] = remStops1[0]
-                    # adjSchedule.append(blockBottoms[0])
-                    # print 'blockBot[0]: ', blockBottoms[0]
-                # Go through the date adjusting for first split
+
+                # Go through the date adjusting for second split
                 if len(remStarts2) > 2:
                     blockBottoms[1]['startDate'] = remStarts2[1]
                     blockBottoms[1]['stopDate'] = remStops2[1]
-                    # adjSchedule.append(blockBottoms[1])
                     remStarts2.pop(0)
                     remStops2.pop(0)
                     for m, rem in enumerate(remStarts2):
@@ -354,84 +351,15 @@ def cellListParser(rowListI):
                 else:
                     blockBottoms[1]['startDate'] = remStarts2[0]
                     blockBottoms[1]['stopDate'] = remStops2[0]
-                    # adjSchedule.append(blockBottoms[1])
             else:
                 print 'wtf! There should not be >2 bottoms. There are ', len(blockBottoms)
 
-    # print adjSchedule
-
-
-
-
-
-
-
-
-
-
-
-
-# Close but not quite right. I need to start from scratch thinking through which
-# dates go into the pot and which need to be subtracted out. Knowing that the
-# end step is to process through an ordered list of the bottoms and adjusting
-# their dates to the leftovers.
-
-
-
-
-
-
-
-
-        # for top in rowTops:
-            # if top['block'] == blockI:
-                # cellTops.append(top)
-                # topStarts.add(top['startDate'])
-                # topStops.add(top['stopDate'])
-  # print blockBottoms
-    '''
-    Try re-doing this loop with block as the main driver. Get the same bucket of
-    dates. Get a list of bottoms. Loop for bottoms & adjust the dates / build a
-    split if len allows.
-    for bottom in rowBottoms:
-        blockI = bottom['block']
-        botStart = bottom['startDate']
-        botStop = bottom['stopDate']
-
-        # print cellTops
-            bottom['startDate'] = remStarts[0]
-            bottom['stopDate'] = remStops[0]
-            if len(remStarts) > 1:
-                remStarts.pop(0)
-                remStops.pop(0)
-                print 'remStarts: ', remStarts
-                print remStops
-    '''
-    '''
-    I'm getting errors here in the rare cases of tops on split Julys
-    My & Chong's schedule produce them. The logic above isn't
-    grabbing a default stopDate for all scenarios. I need to add the
-    end of the split block in, I think.
-    As is, the loop fails because there are fewer items in remStops
-    so the remStops[l] falls out of range.
-    '''
-    '''
-                for l, split in enumerate(remStarts):
-                    # print split
-                    # print remStarts[l]
-                    # print remStops[l]
-                    try: splitBottom = {'block' : blockI,
-                                'startDate' : remStarts[l],
-                                'stopDate' : remStops[l],
-                                'rotation' : bottom['rotation']}
-                    except: print AmionName
-    '''
 # With all those adjustments done, re-sort the schedule list by start Dates
     sortSched = sorted(schedule, key=lambda k: k['startDate'])
     return sortSched
-#################################################################################
+################################################################################
 ### Globals & Setup
-#################################################################################
+################################################################################
 
 week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 allRes = {}
@@ -507,6 +435,10 @@ for blockHTML in htmlList:
 
     lastBlock = max(blockStarts.keys())
 
+    # These loops define the mid-date for split blocks. It takes a manual entry for
+    # block1 because it's irregularly shaped (ie doesn't start on Monday).
+    # CAREFUL: this works fine in the 4 week / other blocks start on Mondays world
+    # It might have issues if the block structure changes.
     for block in blockStarts:
         bLen = blockStops[block] - blockStarts[block]
         bLen = round(bLen.days) + 1
@@ -531,8 +463,6 @@ for blockHTML in htmlList:
 # Parses those TD tags into a list of block (cells) like the eg below
         rowListIn = rowParser(se2)
         '''
-# for cell in rowListI:
-            # print cell
         List of the table row's cells where multipart cells are list items.
         Ainsworth-A=
         E-CICU
@@ -581,37 +511,55 @@ for blockHTML in htmlList:
 # And add the whole resident's info to the main dict
         allRes[AmionName] = resDict
 
+'''
+allRes looks like this:
+{'Brim-R' :
+    {'CoC': {'weekdayStr': 'Thu', 'location': 'SFGH', 'weekday': 3, 'time': 'pm'},
+    'schedule': [{'startDate': datetime.date(2015, 7, 1), 'rotation': 'E-Res', 'stopDate': datetime.date(2015, 7, 5), 'block': 1, 'bottom': 0}, {'startDate': datetime.date(2015, 7, 6), 'rotation': 'PLUS', 'stopDate': datetime.date(2015, 7, 12), 'block': 1, 'bottom': 0}
+    'pgy': 3}
+ 'Chong-A' : ...
+}
+'''
 ################################################################################
 ### End of main parser. allRes has the whole schedule
+### Next section has prints for debugging
 ################################################################################
-    # print resDict
+# print resDict
 # print len(resDict[AmionName]['schedule'])
 # for rot in  resDict[AmionName]['schedule']:
         # print rot
 # for res in allRes:
     # print res
 # print allRes['Sun-V']['schedule']
-for rotation in allRes['Liou-A']['schedule']:
-    print rotation
+# testRes = 'Brim-R'
+# print 'Test Resident: ', testRes
+# print allRes[testRes]
+# for rotation in allRes[testRes]['schedule']:
+    # print rotation
+
+################################################################################
+### Save the allRes dict locally
+################################################################################
+outfile = 'allResDict.py'
+fhO = open(outfile, 'wb')
+fhO.write(str(allRes))
+fhO.close()
+
 ################################################################################
 ### Little in situ output
 ################################################################################
 # Get a list of all rotations in this year's schedule
-allRotations = set()
-for res in allRes:
-    sched = allRes[res]['schedule']
-    for rot in sched:
-        allRotations.add(rot['rotation'])
+# allRotations = set()
+# for res in allRes:
+    # sched = allRes[res]['schedule']
+    # for rot in sched:
+        # allRotations.add(rot['rotation'])
 
 '''
-Proofread audit some rotation dates to make sure the new parsing works.
-Put some more notes in around the trys & lens and new ifs for block quirks.
 Note the rounding & half issue, that it may not find the right split dates for
 months that don't start on Mondays
 
 Make the parsing thing into a function???
-Super loop to get all the residents.
-Output the list of blocks for Heidi to start on
 Store allRes local.
 
 Start output machines (prolly separate scripts):
