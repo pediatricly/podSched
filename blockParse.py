@@ -283,8 +283,8 @@ def cellListParser(rowListI):
             if len(blockBottoms) == 1:
                 remStarts = sorted(list(posStarts - topStarts))
                 remStops = sorted(list(posStops - topStops))
-                print remStarts
-                print remStops
+                # print remStarts
+                # print remStops
                 if len(remStarts) > 1:
                     blockBottoms[0]['startDate'] = remStarts[0]
                     blockBottoms[0]['stopDate'] = remStops[0]
@@ -435,13 +435,14 @@ def cellListParser(rowListI):
 
 week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 allRes = {}
-block1split = DT.date(2015, 7, 13)
+block1split1 = DT.date(2015, 7, 6)
+block1split23 = DT.date(2015, 7, 13)
 
 target = '^<TR.+?</tr>'
 TDtar = '<td.+?</td>'
-# htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
+htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
 # htmlList = ['tester.html']
-htmlList = ['blockR3.html']
+# htmlList = ['blockR3.html']
 
 # Loop here
 for blockHTML in htmlList:
@@ -512,7 +513,9 @@ for blockHTML in htmlList:
         blockLens[block] = bLen
 
     for block in blockStarts:
-        if block == 1: blockSplits[block] = block1split
+        if block == 1:
+            if classR == 1: blockSplits[block] = block1split1
+            else: blockSplits[block] = block1split23
         else:
             blockSplits[block] = blockStarts[block] + DT.timedelta(
                 days=(blockLens[block] / 2))
@@ -588,7 +591,7 @@ for blockHTML in htmlList:
 # for res in allRes:
     # print res
 # print allRes['Sun-V']['schedule']
-for rotation in allRes['Brim-R']['schedule']:
+for rotation in allRes['Liou-A']['schedule']:
     print rotation
 ################################################################################
 ### Little in situ output
