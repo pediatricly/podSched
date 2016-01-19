@@ -66,22 +66,6 @@ import string
 from bs4 import BeautifulSoup as bs
 import datetime as DT
 #################################################################################
-### Globals & Setup
-#################################################################################
-
-week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
-blockHTML = 'blockR1.html'
-fh = open(blockHTML, 'rb')
-html = fh.read()
-fh.close()
-blockStarts = {}
-blockStops = {}
-blockLens = {}
-allRes = {}
-
-target = '^<TR.+?</tr>'
-TDtar = '<td.+?</td>'
-#################################################################################
 ### Parser Function
 # Takes list of <td></td> cells from re.findall
 # Outputs list len= # table columns with each item corresponding to 1 cell
@@ -123,120 +107,6 @@ def rowParser(seList):
     return rowList
 
 #################################################################################
-# Find the years from the Amion block page
-yearTar = '(\d\d\d\d).(\d\d\d\d)'
-years = re.search(yearTar, html, re.I)
-fallYr = int(years.group(1))
-springYr = int(years.group(2))
-
-classTar = 'R(\d)\w+Block'
-classR = int(re.search(classTar, html, re.I).group(1))
-# re to find the whole table (assumes there's only 1 on the html page
-
-table = re.findall(target, html, re.M)
-header = table[0]
-main = table[1:]
-#################################################################################
-### Read the headers to get block start-stop dates
-#################################################################################
-seHead = re.findall(TDtar, header, re.I)
-
-headDates = rowParser(seHead)
-headDates.pop(0)
-headDates.pop()
-
-for cell in headDates:
-    block = int(cell[0])
-    datesRaw = cell[1]
-    datesSplit = datesRaw.split('-')
-    startD = datesSplit[0]
-    startSplit = startD.split('/')
-    startNums = []
-    for num in startSplit:
-        numInt = int(num)
-        startNums.append(numInt)
-    if startNums[0] > 6: yearI = fallYr
-    else: yearI = springYr
-    blockStarts[block] = DT.date(yearI, startNums[0], startNums[1])
-
-    stopD = datesSplit[1]
-    stopSplit = stopD.split('/')
-    stopNums = []
-    for num in stopSplit:
-        numInt = int(num)
-        stopNums.append(numInt)
-    if stopNums[0] > 6: yearI = fallYr
-    else: yearI = springYr
-    blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
-
-lastBlock = max(blockStarts.keys())
-print lastBlock
-
-for block in blockStarts:
-    bLen = blockStops[block] - blockStarts[block]
-    bLen = round(bLen.days) + 1
-    blockLens[block] = bLen
-print blockLens
-
-#################################################################################
-### Read the main (residents) part of the table
-#################################################################################
-
-for line in main:
-# This is where to build the loop for all resident lines eventually
-    # line = main[7]
-
-# Grabs all the TD tags (cells) in the given row
-    se2 = re.findall(TDtar, line, re.I)
-
-# Parses those TD tags into a list of block (cells) like the eg below
-    rowListI = rowParser(se2)
-    '''
-# for cell in rowListI:
-        # print cell
-    List of the table row's cells where multipart cells are list items.
-    Ainsworth-A=
-    E-CICU
-    PICU3
-    SFN3
-    ['VAC', '| SFX']
-    SFO3
-    SFO3
-    PURPLE3
-    PURPLE3
-    ['VAC', '3/7-3/13', 'JEOP | E-Pulm']
-    ['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
-    ['VAC', '5/2-5/8', 'CHO-ICU']
-    ICN3
-    Chief
-    '''
-
-# Pop off the AmionName from the first cell of the row
-    AmionName = rowListI.pop(0)
-    if AmionName[-1].isalpha() == False:
-        AmionName = AmionName[:-1]
-    if AmionName[0].isalpha() == False: continue
-# Pop off & parse to dict the Coc date from the last cell
-    CoCRaw = rowListI.pop(13)
-    CoCweekDayStr = CoCRaw[:3]
-    CoCTime = CoCRaw[3:5]
-    CoCLoc = CoCRaw[5:]
-    try: CoCweekDay = week[CoCweekDayStr]
-    except KeyError: CoCweekDay = None
-
-# Setup data structures for ea resident/row of the table
-    CoCDict = {'weekday' : CoCweekDay,
-            'weekdayStr' : CoCweekDayStr,
-            'time' : CoCTime,
-            'location' : CoCLoc}
-    # resDict = {AmionName : {
-    resDict = {
-                'pgy' : classR,
-            'schedule' : [],
-            'CoC' : CoCDict}
-    schedule = []
-
-#################################################################################
 ### This super complex loop parses that list of cells into a list of dicts with
 # all the schedule data by resident.
 # The first section is easy, parse the single rotation blocks.
@@ -250,6 +120,7 @@ for line in main:
 # - Thus the bottoms have to adjust their start/stop dates to accomodate the
 # tops.
 
+def cellListParser(rowListI):
     for i, item in enumerate(rowListI):
         # Setup empty dicts for each cell/item in the row
         schedDict = {}
@@ -407,20 +278,171 @@ for line in main:
             bottom['stopDate'] = remStops[0]
             if len(remStarts) > 1:
                 remStarts.pop(0)
+                remStops.pop(0)
+                '''
+                I'm getting errors here in the rare cases of tops on split Julys
+                My & Chong's schedule produce them. The logic above isn't
+                grabbing a default stopDate for all scenarios. I need to add the
+                end of the split block in, I think.
+                As is, the loop fails because there are fewer items in remStops
+                so the remStops[l] falls out of range.
+                '''
                 for l, split in enumerate(remStarts):
-                    splitBottom = {'block' : blockI,
+                    print split
+                    try: splitBottom = {'block' : blockI,
                                 'startDate' : remStarts[l],
                                 'stopDate' : remStops[l],
                                 'rotation' : bottom['rotation']}
+                    except: print AmionName
                 schedule.append(splitBottom)
 
 # With all those adjustments done, re-sort the schedule list by start Dates
     sortSched = sorted(schedule, key=lambda k: k['startDate'])
-# Finally, put the sorted rotations list into the current resDict
-    resDict['schedule'] = sortSched
-# And add the whole resident's info to the main dict
-    allRes[AmionName] = resDict
+    return sortSched
+#################################################################################
+### Globals & Setup
+#################################################################################
 
+week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
+allRes = {}
+
+target = '^<TR.+?</tr>'
+TDtar = '<td.+?</td>'
+# htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
+# htmlList = ['tester.html']
+htmlList = ['blockR3.html']
+
+# Loop here
+for blockHTML in htmlList:
+    fh = open(blockHTML, 'rb')
+    html = fh.read()
+    fh.close()
+    blockStarts = {}
+    blockStops = {}
+    blockLens = {}
+#################################################################################
+# Find the years from the Amion block page
+    yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
+    years = re.search(yearTar, html, re.I)
+    fallYr = int(years.group(1))
+    springYr = int(years.group(2))
+
+    classTar = 'R(\d) Block'
+    classR = int(re.search(classTar, html, re.I).group(1))
+# re to find the whole table (assumes there's only 1 on the html page
+
+    table = re.findall(target, html, re.M)
+    header = table[0]
+    main = table[1:]
+#################################################################################
+### Read the headers to get block start-stop dates
+#################################################################################
+    seHead = re.findall(TDtar, header, re.I)
+
+    headDates = rowParser(seHead)
+    headDates.pop(0)
+    headDates.pop()
+
+    prevMonthStart = 4
+    prevMonthStop = 4
+    yearI = fallYr
+    for cell in headDates:
+        block = int(cell[0])
+        datesRaw = cell[1]
+        datesSplit = datesRaw.split('-')
+        startD = datesSplit[0]
+        startSplit = startD.split('/')
+        startNums = []
+        for num in startSplit:
+            numInt = int(num)
+            startNums.append(numInt)
+        if startNums[0] >= prevMonthStart: pass
+        else: yearI = springYr
+        blockStarts[block] = DT.date(yearI, startNums[0], startNums[1])
+        prevMonthStart = startNums[0]
+
+        stopD = datesSplit[1]
+        stopSplit = stopD.split('/')
+        stopNums = []
+        for num in stopSplit:
+            numInt = int(num)
+            stopNums.append(numInt)
+        if stopNums[0] >= prevMonthStop: pass
+        else: yearI = springYr
+        blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
+        prevMonthStop = stopNums[0]
+
+    lastBlock = max(blockStarts.keys())
+
+    for block in blockStarts:
+        bLen = blockStops[block] - blockStarts[block]
+        bLen = round(bLen.days) + 1
+        blockLens[block] = bLen
+
+#################################################################################
+### Read the main (residents) part of the table
+#################################################################################
+
+    for line in main:
+# Grabs all the TD tags (cells) in the given row
+        se2 = re.findall(TDtar, line, re.I)
+
+# Parses those TD tags into a list of block (cells) like the eg below
+        rowListIn = rowParser(se2)
+        '''
+# for cell in rowListI:
+            # print cell
+        List of the table row's cells where multipart cells are list items.
+        Ainsworth-A=
+        E-CICU
+        PICU3
+        SFN3
+        ['VAC', '| SFX']
+        SFO3
+        SFO3
+        PURPLE3
+        PURPLE3
+        ['VAC', '3/7-3/13', 'JEOP | E-Pulm']
+        ['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
+        ['VAC', '5/2-5/8', 'CHO-ICU']
+        ICN3
+        Chief
+        '''
+
+# Pop off the AmionName from the first cell of the row
+        AmionName = rowListIn.pop(0)
+        if AmionName[-1].isalpha() == False:
+            AmionName = AmionName[:-1]
+        if AmionName[0].isalpha() == False: continue
+# Pop off & parse to dict the Coc date from the last cell
+        CoCRaw = rowListIn.pop(lastBlock)
+        CoCweekDayStr = CoCRaw[:3]
+        CoCTime = CoCRaw[3:5]
+        CoCLoc = CoCRaw[5:]
+        try: CoCweekDay = week[CoCweekDayStr]
+        except KeyError: CoCweekDay = None
+
+# Setup data structures for ea resident/row of the table
+        CoCDict = {'weekday' : CoCweekDay,
+                'weekdayStr' : CoCweekDayStr,
+                'time' : CoCTime,
+                'location' : CoCLoc}
+        # resDict = {AmionName : {
+        resDict = {
+                    'pgy' : classR,
+                'schedule' : [],
+                'CoC' : CoCDict}
+        schedule = []
+
+# Finally, put the sorted rotations list into the current resDict
+        sortSchedOut = cellListParser(rowListIn)
+        resDict['schedule'] = sortSchedOut
+# And add the whole resident's info to the main dict
+        allRes[AmionName] = resDict
+
+################################################################################
+### End of main parser. allRes has the whole schedule
+################################################################################
     # print resDict
 # print len(resDict[AmionName]['schedule'])
 # for rot in  resDict[AmionName]['schedule']:
@@ -428,14 +450,17 @@ for line in main:
 # for res in allRes:
     # print res
 # print allRes['Sun-V']['schedule']
-# for rotation in allRes['Sun-V']['schedule']:
-    # print rotation
+for rotation in allRes['Sun-V']['schedule']:
+    print rotation
+################################################################################
+### Little in situ output
+################################################################################
+# Get a list of all rotations in this year's schedule
 allRotations = set()
 for res in allRes:
     sched = allRes[res]['schedule']
     for rot in sched:
         allRotations.add(rot['rotation'])
-# print allRotations
 
 '''
 Proofread audit some rotation dates to make sure the new parsing works.
