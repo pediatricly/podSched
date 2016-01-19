@@ -194,13 +194,12 @@ def cellListParser(rowListI):
                 bottoms = bottom.split(' | ')
                 schedDictB1['block'] = i+1
                 schedDictB1['startDate'] = blockStarts[i+1]
-                schedDictB1['stopDate'] = blockStarts[i+1] + DT.timedelta(
-                    days=(blockLens[i+1]/2 -1))
+                schedDictB1['stopDate'] = blockSplits[i+1] + DT.timedelta(
+                    days=-1)
                 schedDictB1['rotation'] = bottoms[0]
                 schedDictB1['bottom'] = 1
                 schedDictB2['block'] = i+1
-                schedDictB2['startDate'] = blockStarts[i+1] + DT.timedelta(
-                    days=blockLens[i+1]/2)
+                schedDictB2['startDate'] = blockSplits[i+1]
                 schedDictB2['stopDate'] = blockStops[i+1]
                 schedDictB2['rotation'] = bottoms[1]
                 schedDictB2['bottom'] = 1
@@ -246,56 +245,187 @@ def cellListParser(rowListI):
         elif rotation['bottom'] == 0:
             rowTops.append(rotation)
 
+    adjSchedule = []
+    for blockNum in range(1, lastBlock + 1):
+        blockBottoms = []
+        blockTops = []
+        topStarts = set()
+        topStops = set()
+        posStarts = set()
+        posStops = set()
+        for rotation in schedule:
+            if rotation['block'] == blockNum:
+                if rotation['bottom'] == 1:
+                    # Add bottoms to sets
+                    # Looping this way should get all bottoms, split or not
+                    blockBottoms.append(rotation)
+                    posStarts.add(rotation['startDate'])
+                    posStops.add(rotation['stopDate'])
+                else:
+                    # Add tops to sets
+                    blockTops.append(rotation)
+                    topStarts.add(rotation['startDate'])
+                    topStops.add(rotation['stopDate'])
+                    posStarts.add(rotation['startDate'])
+                    posStops.add(rotation['stopDate'])
+                    # Tops need their days before & after added to posSets but
+                    # only if in the block
+                    if rotation['stopDate'] + DT.timedelta(days=1) < blockStops[blockNum]:
+                        posStarts.add(rotation['stopDate'] + DT.timedelta(days=1))
+                    if rotation['startDate'] + DT.timedelta(days=-1) > blockStarts[blockNum]:
+                        posStops.add(rotation['startDate'] + DT.timedelta(days=-1))
+        # print posStarts
+        # print posStops
+        # Only need to adjust the dates if there are tops. O/w dates should be
+        # right from the split parsing. Hence the if len > 0:
+        if len(blockTops) > 0:
+            # These are blocks with only 1 bottom
+            if len(blockBottoms) == 1:
+                remStarts = sorted(list(posStarts - topStarts))
+                remStops = sorted(list(posStops - topStops))
+                print remStarts
+                print remStops
+                if len(remStarts) > 1:
+                    blockBottoms[0]['startDate'] = remStarts[0]
+                    blockBottoms[0]['stopDate'] = remStops[0]
+                    remStarts.pop(0)
+                    remStops.pop(0)
+                    for m, rem in enumerate(remStarts):
+                        splitBottom = {'block' : blockNum,
+                                        'startDate' : rem,
+                                        'stopDate' : remStops[m],
+                                        'rotation' : blockBottoms[0]['rotation']}
+                        schedule.append(splitBottom)
+                else:
+                    blockBottoms[0]['startDate'] = remStarts[0]
+                    blockBottoms[0]['stopDate'] = remStops[0]
+                    # adjSchedule.append(blockBottoms[0])
+            # These are blocks with 2 bottoms
+            elif len(blockBottoms) ==2:
+                # Find the split
+                posStarts1 = set()
+                posStarts2 = set()
+                posStops1 = set()
+                posStops2 = set()
+                for date in posStarts:
+                    if date < blockSplits[blockNum]: posStarts1.add(date)
+                    else: posStarts2.add(date)
+                for date in posStops:
+                    if date <= blockSplits[blockNum]: posStops1.add(date)
+                    else: posStops2.add(date)
+
+                remStarts1 = sorted(list(posStarts1 - topStarts))
+                remStarts2 = sorted(list(posStarts2 - topStarts))
+                remStops1 = sorted(list(posStops1 - topStops))
+                remStops2 = sorted(list(posStops2 - topStops))
+
+                # print 'remStarts1: ', remStarts1
+                # print 'remstarts2: ', remStarts2
+                # Go through the date adjusting for first split
+                if len(remStarts1) > 2:
+                    blockBottoms[0]['startDate'] = remStarts1[0]
+                    blockBottoms[0]['stopDate'] = remStops1[0]
+                    remStarts1.pop(0)
+                    remStops1.pop(0)
+                    for m, rem in enumerate(remStarts1):
+                        splitBottom1 = {'block' : blockNum,
+                                        'startDate' : rem,
+                                        'stopDate' : remStops1[m],
+                                        'rotation' : blockBottoms[0]['rotation']}
+                        schedule.append(splitBottom1)
+                else:
+                    blockBottoms[0]['startDate'] = remStarts1[0]
+                    blockBottoms[0]['stopDate'] = remStops1[0]
+                    # adjSchedule.append(blockBottoms[0])
+                    # print 'blockBot[0]: ', blockBottoms[0]
+                # Go through the date adjusting for first split
+                if len(remStarts2) > 2:
+                    blockBottoms[1]['startDate'] = remStarts2[1]
+                    blockBottoms[1]['stopDate'] = remStops2[1]
+                    # adjSchedule.append(blockBottoms[1])
+                    remStarts2.pop(0)
+                    remStops2.pop(0)
+                    for m, rem in enumerate(remStarts2):
+                        splitBottom2 = {'block' : blockNum,
+                                        'startDate' : rem,
+                                        'stopDate' : remStops2[m],
+                                        'rotation' : blockBottom[1]['rotation']}
+                        schedule.append(splitBottom2)
+                else:
+                    blockBottoms[1]['startDate'] = remStarts2[0]
+                    blockBottoms[1]['stopDate'] = remStops2[0]
+                    # adjSchedule.append(blockBottoms[1])
+            else:
+                print 'wtf! There should not be >2 bottoms. There are ', len(blockBottoms)
+
+    # print adjSchedule
+
+
+
+
+
+
+
+
+
+
+
+
+# Close but not quite right. I need to start from scratch thinking through which
+# dates go into the pot and which need to be subtracted out. Knowing that the
+# end step is to process through an ordered list of the bottoms and adjusting
+# their dates to the leftovers.
+
+
+
+
+
+
+
+
+        # for top in rowTops:
+            # if top['block'] == blockI:
+                # cellTops.append(top)
+                # topStarts.add(top['startDate'])
+                # topStops.add(top['stopDate'])
+  # print blockBottoms
+    '''
+    Try re-doing this loop with block as the main driver. Get the same bucket of
+    dates. Get a list of bottoms. Loop for bottoms & adjust the dates / build a
+    split if len allows.
     for bottom in rowBottoms:
         blockI = bottom['block']
         botStart = bottom['startDate']
         botStop = bottom['stopDate']
-        cellTops = []
-        topStarts = set()
-        topStops = set()
-        for top in rowTops:
-            if top['block'] == blockI:
-                cellTops.append(top)
-                topStarts.add(top['startDate'])
-                topStops.add(top['stopDate'])
 
-        posStarts = set()
-        posStops = set()
-        if len(cellTops) > 0:
-            for top in cellTops:
-                posStarts.add(top['startDate'])
-                if top['stopDate'] + DT.timedelta(days=1) < botStop:
-                    posStarts.add(top['stopDate'] + DT.timedelta(days=1))
-                posStarts.add(botStart)
-                if top['startDate'] + DT.timedelta(days=-1) > botStart:
-                    posStops.add(top['startDate'] + DT.timedelta(days=-1))
-                if top['stopDate'] < botStop:
-                    posStops.add(top['stopDate'])
-                posStops.add(botStop)
-            remStarts = sorted(list(posStarts - topStarts))
-            remStops = sorted(list(posStops - topStops))
+        # print cellTops
             bottom['startDate'] = remStarts[0]
             bottom['stopDate'] = remStops[0]
             if len(remStarts) > 1:
                 remStarts.pop(0)
                 remStops.pop(0)
-                '''
-                I'm getting errors here in the rare cases of tops on split Julys
-                My & Chong's schedule produce them. The logic above isn't
-                grabbing a default stopDate for all scenarios. I need to add the
-                end of the split block in, I think.
-                As is, the loop fails because there are fewer items in remStops
-                so the remStops[l] falls out of range.
-                '''
+                print 'remStarts: ', remStarts
+                print remStops
+    '''
+    '''
+    I'm getting errors here in the rare cases of tops on split Julys
+    My & Chong's schedule produce them. The logic above isn't
+    grabbing a default stopDate for all scenarios. I need to add the
+    end of the split block in, I think.
+    As is, the loop fails because there are fewer items in remStops
+    so the remStops[l] falls out of range.
+    '''
+    '''
                 for l, split in enumerate(remStarts):
-                    print split
+                    # print split
+                    # print remStarts[l]
+                    # print remStops[l]
                     try: splitBottom = {'block' : blockI,
                                 'startDate' : remStarts[l],
                                 'stopDate' : remStops[l],
                                 'rotation' : bottom['rotation']}
                     except: print AmionName
-                schedule.append(splitBottom)
-
+    '''
 # With all those adjustments done, re-sort the schedule list by start Dates
     sortSched = sorted(schedule, key=lambda k: k['startDate'])
     return sortSched
@@ -305,6 +435,7 @@ def cellListParser(rowListI):
 
 week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 allRes = {}
+block1split = DT.date(2015, 7, 13)
 
 target = '^<TR.+?</tr>'
 TDtar = '<td.+?</td>'
@@ -320,6 +451,7 @@ for blockHTML in htmlList:
     blockStarts = {}
     blockStops = {}
     blockLens = {}
+    blockSplits = {}
 #################################################################################
 # Find the years from the Amion block page
     yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
@@ -378,6 +510,12 @@ for blockHTML in htmlList:
         bLen = blockStops[block] - blockStarts[block]
         bLen = round(bLen.days) + 1
         blockLens[block] = bLen
+
+    for block in blockStarts:
+        if block == 1: blockSplits[block] = block1split
+        else:
+            blockSplits[block] = blockStarts[block] + DT.timedelta(
+                days=(blockLens[block] / 2))
 
 #################################################################################
 ### Read the main (residents) part of the table
@@ -450,7 +588,7 @@ for blockHTML in htmlList:
 # for res in allRes:
     # print res
 # print allRes['Sun-V']['schedule']
-for rotation in allRes['Sun-V']['schedule']:
+for rotation in allRes['Brim-R']['schedule']:
     print rotation
 ################################################################################
 ### Little in situ output
