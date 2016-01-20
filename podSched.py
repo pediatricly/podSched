@@ -17,6 +17,10 @@ Build plan:
     - rank & output
 
 11jan16: It all works!
+19jan16: Just made way more awesome using the allRes dict. This is a locally
+stored dict of the year's entire Amion schedule (cf blockParse.py). Using this,
+I updated AmionLookup to grab the block from that dict as well & output it to
+candidates.csv
 '''
 
 #===============================================================================
@@ -27,12 +31,12 @@ import os.path
 import urllib
 import string
 import datetime as DT
+from allResStr import allRes as allRes # Local stored dict of whole block sched
 ###################################################################
 ### Define Globals Before Main try block
 ###################################################################
 try: version = os.path.basename(__file__)
 except: version = 'podSched1'
-
 
 fieldnames = ['AmionRot', 'cleanRotName', 'Milestone Map Label']
 residentD = {}
@@ -57,7 +61,7 @@ postCallN = 'postCall'
 csvIn = 'rotationsQual.csv'
 csvOut = 'candidates.csv'
 #################################################################################
-endDate = DT.date(2016,3,31)
+endDate = DT.date(2016,4,20)
 startDate = DT.date.today() # Default to search from today, can make raw-input
 weekendsOK = 0
 AmionNames = ['Sun-V', 'Emmott-M', 'Steinberg-E']
@@ -84,7 +88,7 @@ increment = DT.timedelta(days=1)
 ##### Look up the schedule in Amion and put rotations in a list
 #################################################################################
 
-def amionLookup(AmName, htmli):
+def amionLookup(AmName, htmli, resDict):
     fullTable1 = re.findall("^<TR><td>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
     fullTable2 = re.findall("^<TR class=grbg><td>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
     fullTable3 = re.findall("^<TR><td></font><font color=#\w\w\w\w\w\w>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
@@ -98,19 +102,6 @@ def amionLookup(AmName, htmli):
             tempList = [rotation, resident]
             resRotList.append(tempList)
     # [['KWInt-Long', 'Steinberg-E'], ['RedBMT-Day', 'Emmott-M']...]
-
-    outList = [] # [{'shifts': ['UCW3-Day'], 'AmionName': 'Sun-V'}, {'shifts': ['Not Found']...}]
-    for name in AmName:
-        shifts = [] # Shifts as a list for rare cases when names twice in 1 day
-        currRot = 'Not Found'
-        nameDict = {'AmionName' : name}
-        for resRotPair in resRotList:
-            if name == resRotPair[1]:
-                currRot = resRotPair[0] # Update currRot to the shift if found
-                shifts.append(currRot)
-        if len(shifts) == 0: shifts.append(currRot) # 1 copy of default if not found
-        nameDict['shifts'] = shifts # {'shifts': ['UCW3-Day'], 'AmionName': 'Sun-V'}, {'shifts'
-        outList.append(nameDict)
 
     # This section re finds the date from the Amion html then parses it into a
     # Python date so it sorts/compares reliably.
@@ -126,10 +117,32 @@ def amionLookup(AmName, htmli):
     monLetters = dPartsClean[1]
     pyDate = DT.date(dPartsClean[3], DT.datetime.strptime(monLetters, '%b').month,
                     dPartsClean[2])
+    isoDate = pyDate.isoformat()
+
+    outList = [] # [{'shifts': ['UCW3-Day'], 'AmionName': 'Sun-V'}, {'shifts': ['Not Found']...}]
+    for name in AmName:
+        shifts = [] # Shifts as a list for rare cases when names twice in 1 day
+        currRot = 'Not Found'
+        nameDict = {'AmionName' : name}
+        for resRotPair in resRotList:
+            if name == resRotPair[1]:
+                currRot = resRotPair[0] # Update currRot to the shift if found
+                shifts.append(currRot)
+        if len(shifts) == 0: shifts.append(currRot) # 1 copy of default if not found
+        nameDict['shifts'] = shifts # {'shifts': ['UCW3-Day'], 'AmionName': 'Sun-V'}, {'shifts'
+
+        block = ''
+        blockSched = resDict[name]['schedule']
+        for rotation in blockSched:
+            if isoDate >= rotation['startDate'] and isoDate <= rotation['stopDate']:
+                block = rotation['rotation']
+        nameDict['block'] = block
+
+        outList.append(nameDict)
 
     # Sample output:
     # ['2016-01-10', 'Sun, Jan 10, 2016', [{'shifts': ['UCW3-Day'], 'AmionName':
-    # 'Sun-V'}, {'shifts': ['Not Found'], 'AmionName': 'Wu-L'}]]
+    # 'Sun-V', 'block': 'ORANGE3'}, {'shifts': ['Not Found'], 'AmionName': 'Wu-L'}]]
 
     return {pyDate : outList}
 ###################################################################
@@ -183,7 +196,7 @@ while tracker < endDate:
     reqI = requests.get(baseUrl + nextLink)
     htmlI = reqI.content
     nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
-    lookUp = amionLookup(AmionNames, htmlI) # Lookup date & shift given AmionNames
+    lookUp = amionLookup(AmionNames, htmlI, allRes) # Lookup date & shift given AmionNames
 
 #################################################################################
 # This section sets up the data analysis & is what changes for different
@@ -220,16 +233,16 @@ while tracker < endDate:
 
     tracker = tracker + increment # Don't lose. Tracks date, break while loop.
 
-for day in allDays:
-    print allDays[day]['postCall']
+# for day in allDays:
+    # print allDays[day]
 ######### End Loop ##############################################################
 
 # print allDays
 # {'2016-01-10': {'dayScore': -1, 'data': [{'shifts': ['UCW3-Day'], 'score': -1,
-# 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0,
-# 'AmionName': 'Wu-L', 'missing': 1}]}}
+# 'AmionName': 'Sun-V', 'missing': 0, 'block': 'ORANGE3'}, {'shifts': ['Not Found'], 'score': 0,
+# 'AmionName': 'Wu-L', 'missing': 1, 'block': 'DB'}]}}
 
-# In case you need it for offline work:
+# In case you need it for offline work (not updated for block lookup):
 # allDaysSample = {'2016-01-13': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-12': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-15': {'dayScore': -2, 'data': [{'shifts': ['UCW3-Nite'], 'score': -2, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-14': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}}
 
 #################################################################################
@@ -242,10 +255,7 @@ for day in allDays:
         for i in range(len(AmionNames)):
             if allDays[day][dataN][i][nightN] == 1:
                 postCallDay += 1
-                print allDays[day][dataN][i]['shifts']
-                print postDay
         if postCallDay > 0:
-            print postCallDay
             allDays[postDay][dayScoreN] += (scoreDict[postCallN] * postCallDay)
             allDays[postDay][postCallN] = postCallDay
     except KeyError: pass
@@ -299,7 +309,9 @@ for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
                 # row.append(day[1]['data'][i]['AmionName'])
                 shiftStr = ''
                 for shift in day[1]['data'][i]['shifts']:
-                    shiftStr += shift
+                    block = day[1]['data'][i]['block'] #Add block to output
+                    increment = shift + '/' + block + ' '
+                    shiftStr += increment
                 row.append(shiftStr)
             print row
             csvwriter.writerow(row)

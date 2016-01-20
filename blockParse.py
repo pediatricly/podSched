@@ -540,10 +540,25 @@ allRes looks like this:
 ################################################################################
 ### Save the allRes dict locally
 ################################################################################
-outfile = 'allResDict.py'
+'''
+allResStr = {}
+for res in allRes:
+    res2 = allRes[res]
+    sched = res2['schedule']
+    for rotation in sched:
+        rotation['startDate'] = rotation['startDate'].isoformat()
+        rotation['stopDate'] = rotation['stopDate'].isoformat()
+    allResStr[res] = res2
+outfile = 'allResStr.py'
 fhO = open(outfile, 'wb')
 fhO.write(str(allRes))
 fhO.close()
+
+outJson = 'allResJson.txt'
+fhO = open(outJson, 'wb')
+json.dump(allResStr, fhO)
+fhO.close()
+'''
 
 ################################################################################
 ### Little in situ output
