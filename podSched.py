@@ -61,11 +61,11 @@ postCallN = 'postCall'
 csvIn = 'rotationsQual.csv'
 csvOut = 'candidates.csv'
 #################################################################################
-endDate = DT.date(2016,4,20)
+endDate = DT.date(2016,2,29)
 startDate = DT.date.today() # Default to search from today, can make raw-input
 weekendsOK = 0
-AmionNames = ['Sun-V', 'Emmott-M', 'Steinberg-E']
-candidates = 20
+AmionNames = ['Sun-V', 'Brim-R', 'Ainsworth-A', 'Pantell-M']
+candidates = 10
 vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
 
 ###### Basic Date Calculations ##################################################
@@ -321,7 +321,6 @@ fh.close()
 '''
 allDaysSample[day][dayScoreN] returns the score
 '''
-
 
 
 

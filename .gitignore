@@ -1,3 +1,6 @@
 .rope*
 *.swp
+*.pyc
+allResStr.py
 allResDict.py
+*.csv

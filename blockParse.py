@@ -452,6 +452,30 @@ for blockHTML in htmlList:
             blockSplits[block] = blockStarts[block] + DT.timedelta(
                 days=(blockLens[block] / 2))
 
+    '''
+    This section writes the dates for local use.
+    blockStartsStr = {}
+    for block in blockStarts:
+        blockStartsStr[block] = blockStarts[block].isoformat()
+    blockStopsStr = {}
+    for block in blockStops:
+        blockStopsStr[block] = blockStops[block].isoformat()
+    with open('blockDates.py', 'a') as fhO:
+        if classR == 3:
+            fhO.write('blockStarts23 = ')
+            fhO.write(str(blockStartsStr))
+            fhO.write('\n')
+            fhO.write('blockStops23 = ')
+            fhO.write(str(blockStopsStr))
+            fhO.write('\n')
+        elif classR == 1:
+            fhO.write('blockStarts1 = ')
+            fhO.write(str(blockStartsStr))
+            fhO.write('\n')
+            fhO.write('blockStops1 = ')
+            fhO.write(str(blockStopsStr))
+            fhO.write('\n')
+    '''
 #################################################################################
 ### Read the main (residents) part of the table
 #################################################################################
@@ -540,7 +564,6 @@ allRes looks like this:
 ################################################################################
 ### Save the allRes dict locally
 ################################################################################
-'''
 allResStr = {}
 for res in allRes:
     res2 = allRes[res]
@@ -552,13 +575,16 @@ for res in allRes:
 outfile = 'allResStr.py'
 fhO = open(outfile, 'wb')
 fhO.write(str(allRes))
-fhO.close()
+fhO.write('\n')
 
+'''
 outJson = 'allResJson.txt'
 fhO = open(outJson, 'wb')
 json.dump(allResStr, fhO)
 fhO.close()
 '''
+# print blockStarts
+# print blockStops
 
 ################################################################################
 ### Little in situ output

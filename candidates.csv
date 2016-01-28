@@ -1,21 +1,11 @@
-date,dayOfWeek,dayScore,postCall,Sun-V,Emmott-M,Steinberg-E
-2016-02-25,Thu,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/PLUS   
-2016-03-08,Tue,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/ADOL   
-2016-02-24,Wed,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/PLUS   
-2016-03-09,Wed,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/ADOL   
-2016-03-01,Tue,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/ADOL   
-2016-01-21,Thu,1,0, Not  Found/ORANGE3   , Not  Found/E-CAS   , KWInt-Short/KW1   
-2016-03-10,Thu,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/ADOL   
-2016-02-23,Tue,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/PLUS   
-2016-03-11,Fri,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/ADOL   
-2016-01-22,Fri,1,0, Not  Found/ORANGE3   , Not  Found/E-CAS   , KWInt-Short/KW1   
-2016-02-26,Fri,1,0, SFO-SCR/SFO3   , Not  Found/DB   , Not  Found/PLUS   
-2016-03-07,Mon,0,0, Not  Found/SFO3   , Not  Found/DB   , Not  Found/ADOL   
-2016-04-12,Tue,0,0, Not  Found/PICU3   , TCU-ID/TCU-ID   , Not  Found/PEM   
-2016-02-17,Wed,0,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/PLUS   
-2016-03-23,Wed,0,0, SFO-SCR/SFO3   , TCU-Day/TCU   , Not  Found/ADOL   
-2016-01-20,Wed,0,0, Not  Found/ORANGE3   , Not  Found/E-CAS   , Not  Found/KW1   
-2016-04-15,Fri,0,0, Not  Found/PICU3   , TCU-ID/TCU-ID  TCU-Nite/TCU-ID   , Not  Found/PEM   
-2016-04-20,Wed,0,0, Not  Found/PICU3   , TCU-ID/TCU-ID   , Not  Found/PEM   
-2016-02-15,Mon,0,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/PLUS   
-2016-02-16,Tue,0,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/PLUS   
+date,dayOfWeek,dayScore,postCall,Sun-V,Brim-R,Ainsworth-A,Pantell-M
+2016-02-25,Thu,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-23,Tue,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-26,Fri,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-24,Wed,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-29,Mon,-1,0, Not  Found/SFO3   , Not  Found/E-Rnl   , Not  Found/E-Pulm   , SFN  Sr  Day/SFN3   
+2016-02-19,Fri,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-17,Wed,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-18,Thu,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-16,Tue,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+2016-02-22,Mon,-1,0, Not  Found/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
