@@ -372,9 +372,13 @@ for res in data:
     for block in data[res]:
         try:
             data[res][block]['actual']['amLate'] = data[res][block]['actual']['amLate'] / data[res][block]['actual']['am']
+        except ZeroDivisionError:
+            data[res][block]['actual']['amLate'] = '-'
+        try:
             data[res][block]['actual']['noonLate'] = data[res][block]['actual']['noonLate'] / data[res][block]['actual']['noon']
-        except ZeroDivisionError: pass
-print data['Shalen-J']
+        except ZeroDivisionError:
+            data[res][block]['actual']['noonLate'] = '-'
+# print data['Shalen-J']
 
 #########################################################
 ### Write the output data
@@ -399,13 +403,13 @@ with open(csvOutFile, 'wb') as csvOut:
             row.append(data[res][block]['actual']['am'])
             row.append(data[res][block]['expected']['am'])
             try: row.append(data[res][block]['actual']['am'] / data[res][block]['expected']['am'])
-            except: row.append(0)
+            except: row.append('-')
             row.append(data[res][block]['actual']['amLate'])
 
             row.append(data[res][block]['actual']['noon'])
             row.append(data[res][block]['expected']['noon'])
             try: row.append(data[res][block]['actual']['noon'] / data[res][block]['expected']['noon'])
-            except: row.append(0)
+            except: row.append('-')
             row.append(data[res][block]['actual']['noonLate'])
         writer.writerow(row)
 # print data
