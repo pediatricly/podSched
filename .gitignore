@@ -3,4 +3,6 @@
 *.pyc
 allResStr.py
 allResDict.py
+ainStr.py
+shalStr.py
 *.csv

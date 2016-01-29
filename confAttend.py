@@ -44,11 +44,11 @@ How it works:
     Eg. I've found quite a few badge barcodes are incomplete. This list will
     also collect badges not in the directory, eg, med students
 
-BUGS!:
-    - Bad news, it is not tallying the expected dates correctly. Ainsworth has
-    2 weeks of Purple in block 9 and Shalen has none (should have 4 each).
-    Maybe the date tracker iteration is wrong???
-
+Notable Bugs / Versions:
+    - 29jan16: fixed a tiny error with block assignment. The look that moved
+    event data from cleanDict into data was using the wrong block variable
+    (block instead of blockI) that led to events being added to the wrong block.
+    Seems to work accurately across R1s & R3s (tested on Ainsworth & Shalen) now.
 
 
 Features to add:
@@ -62,7 +62,8 @@ Features to add:
 import csv
 import datetime as DT
 import os.path
-from allResStr import allRes
+from allResStr import allRes as allRes
+# from shalStr import aString as allRes
 from blockDates import blockStarts23
 from blockDates import blockStops23
 from blockDates import blockStarts1
@@ -220,7 +221,7 @@ for row in reader:
     if row['AmionName'] != '':
         badgeDict[row['AmionName']] = row
 fh.close()
-print badgeDict
+# print badgeDict
 # {'Simmons-R': {'Category 15-16': 'PGY-1', 'Name First': 'Roxanne', 'Name Middle':
               # 'Lynn', 'ID Number (employee)': '22157878', 'AmionName':
               # 'Simmons-R', 'Library': '21378801448544', 'badgeCode':
@@ -251,8 +252,8 @@ for key in cleanDict:
     cleanDict[key]['rotation'] = tupule[1]
     cleanDict[key]['block'] = tupule[0]
 
-# for key in cleanDict:
-    # print cleanDict[key]
+for key in cleanDict:
+    print cleanDict[key]
 # {{'minLate': 46, 'AmionName': 'Shalen-J', 'conf': 'am', 'time':
  # datetime.time(8, 46, 4), 'date': datetime.date(2016, 1, 26), 'rotation':
  # 'PURPLE1', 'badge': '21378800976610', 'block': 8}
@@ -286,7 +287,8 @@ for res in allRes:
     resDict = {}
     for block in blocks:
         resDict[block] = {'actual' : {'am': 0, 'amLate': 0, 'noon': 0, 'noonLate':0},
-                          'expected' : {'am': 0, 'amLate': 0, 'noon': 0, 'noonLate':0}}
+                          'expected' : {'am': 0, 'noon': 0}}
+                          # 'expected' : {'am': 0, 'amLate': 0, 'noon': 0, 'noonLate':0}}
     if allRes[res]['pgy'] in classes:
         data[res] = resDict
 # print data
@@ -325,6 +327,11 @@ for pgyYr in classes:
                     try:
                         data[res][block]['expected']['am'] += amWk
                         data[res][block]['expected']['noon'] += noonWk
+                        # print tracker
+                        # print block
+                        # print rotation
+                        # print data[res][block]['expected']['am']
+                        # print data[res][block]['expected']['noon']
                     except: pass
                     tracker = tracker + increment
 # print data['Ainsworth-A']
@@ -354,11 +361,11 @@ for event in cleanDict:
         else:
             minLateI = cleanDict[event]['minLate']
             if confI == 'am':
-                data[AmName][block]['actual']['am'] += 1
-                data[AmName][block]['actual']['amLate'] += minLateI
+                data[AmName][blockI]['actual']['am'] += 1
+                data[AmName][blockI]['actual']['amLate'] += minLateI
             elif confI == 'noon':
-                data[AmName][block]['actual']['noon'] += 1
-                data[AmName][block]['actual']['noonLate'] += minLateI
+                data[AmName][blockI]['actual']['noon'] += 1
+                data[AmName][blockI]['actual']['noonLate'] += minLateI
 # print data['Ainsworth-A']
 
 for res in data:
@@ -367,7 +374,7 @@ for res in data:
             data[res][block]['actual']['amLate'] = data[res][block]['actual']['amLate'] / data[res][block]['actual']['am']
             data[res][block]['actual']['noonLate'] = data[res][block]['actual']['noonLate'] / data[res][block]['actual']['noon']
         except ZeroDivisionError: pass
-# print data['Ainsworth-A']
+print data['Shalen-J']
 
 #########################################################
 ### Write the output data
