@@ -60,6 +60,7 @@ onChange="document.GetPage.submit();" which must be from a separate .js file
 
 '''
 #################################################################################
+import requests
 import re
 import csv
 from bs4 import BeautifulSoup as bs
@@ -68,15 +69,14 @@ import json
 ################################################################################
 ### Globals & Setup
 ################################################################################
-urlList = ['http://amion.com/cgi-bin/ocs?File=!a2fbe090qz^xadkj_x&Page=Block&Fsiz=-2&Sbcid=6',
-           ]
-htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
-    fh = open(blockHTML, 'rb')
-    html = fh.read()
-    print html
-    fh.close()
+# htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
 # htmlList = ['tester.html']
 # htmlList = ['blockR3.html']
+urlStub = "http://amion.com/cgi-bin/ocs"
+payload = {'login' : 'ucsfpeds'}
+skills = {'2': '', '3': '', '4':''}
+firstpart = "&Page=Block&Sbcid=6&Skill="
+secondpart = '&Rsel=-1&Blks=0-0'
 
 # Specifcy the block 1 split manually because the computer may guess
 # wrong
@@ -101,6 +101,35 @@ updated = 'updated = ' + DT.date.today().isoformat()
 # Other globals
 allRes = {}
 week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
+
+
+#################################################################################
+### Amion Scraper Function
+#################################################################################
+def AmionBlockScraper(url, load, first, second, skillsDict):
+    r = requests.post(urlStub, data=load)
+    html = r.text # This is outputting the html of the actual schedule landing page
+    # print html
+    tar = 'cgi-bin/ocs\?Fi=(.+?)[&"]'
+    search = re.findall(tar ,html, re.M)
+    nameSet = set(); fileStub = ''
+
+    for item in search: nameSet.add(item)
+    if len(nameSet) > 1: print "whoa - more than 1 link..."
+    elif len(nameSet) == 1:
+        fileStub = nameSet.pop().encode('ascii', 'ignore')
+    else: print "whoa - regex found nothing"
+
+    for skill in skillsDict:
+        htmlI = ''
+        load['Skill'] = str(skill)
+        url = urlStub + '?File=' + fileStub + first + skill + second
+        rI = requests.post(url)
+        htmlI = rI.text
+        skillsDict[skill] = htmlI
+
+    return skillsDict
+
 #################################################################################
 ### Parser Function
 # Takes list of <td></td> cells from re.findall
@@ -396,14 +425,17 @@ def cellListParser(rowListI):
 #################################################################################
 ### Start loop to read the html input
 #################################################################################
+skills = AmionBlockScraper(urlStub, payload, firstpart, secondpart, skills)
 # Loop here
-for blockHTML in htmlList:
+for skill in skills:
     blockStarts = {}
     blockStops = {}
     blockLens = {}
     blockSplits = {}
 #################################################################################
 # Find the years from the Amion block page
+    html = skills[skill]
+    # print html
     years = re.search(yearTar, html, re.I)
     fallYr = int(years.group(1))
     springYr = int(years.group(2))
