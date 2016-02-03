@@ -1,6 +1,15 @@
 #! /usr/bin/python
 
 '''
+Marks:
+    a - initial import statements, parameters, globals
+    b - AmionBlockScraper function
+    c - rowParser function
+    d - cellListParser function - this is the huge block that parses individual
+    cells in the block schedule with all their multilines & split bottom rows.
+    e - the main loop that goes through the Amion html
+    f - data output
+
 Plan (not flow)
 #- Finish the cell parsing - getting close. Next task is to read the multipart
 #cells. Bottom line is assumed to be month minus date range in top lines.
@@ -34,30 +43,6 @@ Plan (not flow)
 #This setup preserves an index for sub-rotations because they are in a list.
 #But it allows multiple to have the same block attribute.
 #
-#This would be a good time to put classes to use. Should define a resYear class
-#for the top level (a table row), a rotation class with those specific data types
-#and a CoC class with those.
-
-**NEXT**
-- Figure out the top level data structure: list of dicts, move AmionName out to
-be the key of the top level dict? (Probably doesn't matter much)
-Either way, group by class so R3s = {} or []
-- Build the outer loop to loop through all the lines of the table (easy)
-- And eventually figure out how to crawl through Amion.
-Can use re to get the block link from landing page.
-Jumping through classes needs a post method:
-    This got from R3 (default from landing page) to R2
-File:!12e0dde3hucsf_peds
-Page:Block
-Sbcid:6
-Skill:2
-Rsel:-1
-Blks:0-0
-
-I think I can put that in a dict & pass it in a post, but I am not sure where
-that file name is store. I don't see it in the html. Seems to come from a js
-onChange="document.GetPage.submit();" which must be from a separate .js file
-
 '''
 #################################################################################
 import requests
@@ -65,15 +50,16 @@ import re
 import csv
 from bs4 import BeautifulSoup as bs
 import datetime as DT
-import json
+# import json
 ################################################################################
 ### Globals & Setup
 ################################################################################
-# htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
-# htmlList = ['tester.html']
-# htmlList = ['blockR3.html']
+# These parameters feed AmionBlockScraper function to scrape the block schedules
+# out of Amion automatically. All this was reverse engineered on 2Feb16, not
+# sure how stable it is.
 urlStub = "http://amion.com/cgi-bin/ocs"
 payload = {'login' : 'ucsfpeds'}
+blockTar = 'cgi-bin/ocs\?Fi=(.+?)[&"]'
 skills = {'2': '', '3': '', '4':''}
 firstpart = "&Page=Block&Sbcid=6&Skill="
 secondpart = '&Rsel=-1&Blks=0-0'
@@ -105,29 +91,55 @@ week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 
 #################################################################################
 ### Amion Scraper Function
+# Takes the main Amion url, login info (payload), fragments of the url query
+# string, and a dict. Turns out Amion expects them in a certain order & just spits out the
+# default (R3) page if they're not. Rather than get fancy with ordering
+# urlencode, I just used this quick string hack.
+# The dict has keys = "skill" #s. This is how Amion organizes classes. skill 2 =
+# R2s, 3 = R3s & 4 = R1s. (skill 1 is chiefs).
+# The way it does the file name lookup is odd & explained below.
+# This is the query string data (loading R2 from R3):
+# File:!12e0dde3hucsf_peds  # This is what changes on almost every load.
+# Page:Block
+# Sbcid:6
+# Skill:2
+# Rsel:-1
+# Blks:0-0
 #################################################################################
-def AmionBlockScraper(url, load, first, second, skillsDict):
+def AmionBlockScraper(url, load, tar, first, second, skillsDict):
+    # First, load the main Amion landing page.
     r = requests.post(urlStub, data=load)
     html = r.text # This is outputting the html of the actual schedule landing page
-    # print html
-    tar = 'cgi-bin/ocs\?Fi=(.+?)[&"]'
+
+    # Regex for this link form. The ?Fi=__ returns this random file name that
+    # seems to be the UCSF schedule. This link changes to a different random
+    # string on almost every load, but all the links have the same string.
     search = re.findall(tar ,html, re.M)
+    # To be sure, put all those filename strings into a set.
     nameSet = set(); fileStub = ''
 
+    # Make sure the set has 1 element. Should put some better error handling in here.
     for item in search: nameSet.add(item)
     if len(nameSet) > 1: print "whoa - more than 1 link..."
+    # Assuming it has 1 element, use that as the filename string.
     elif len(nameSet) == 1:
         fileStub = nameSet.pop().encode('ascii', 'ignore')
     else: print "whoa - regex found nothing"
 
+    # Use that filename to construct the links to the class block schedule pages.
+    # Those links vary only by the skill parameter, hence this loop.
+    # The html that returns is stored as values in the skillsDict.
     for skill in skillsDict:
         htmlI = ''
         load['Skill'] = str(skill)
+        # As above, I initially used urlencode instead of string concatenation,
+        # but Amion expects the query string in this specific order.
         url = urlStub + '?File=' + fileStub + first + skill + second
         rI = requests.post(url)
         htmlI = rI.text
         skillsDict[skill] = htmlI
 
+    # skillsDict = {'2':'<block page html>...', '3':'<html...>',..}
     return skillsDict
 
 #################################################################################
@@ -425,7 +437,10 @@ def cellListParser(rowListI):
 #################################################################################
 ### Start loop to read the html input
 #################################################################################
-skills = AmionBlockScraper(urlStub, payload, firstpart, secondpart, skills)
+# This scrapes Amion & returns dict whose values are the html of the block
+# schedules
+skills = AmionBlockScraper(urlStub, payload, blockTar, firstpart, secondpart, skills)
+
 # Loop here
 for skill in skills:
     blockStarts = {}
@@ -604,7 +619,7 @@ allRes looks like this:
     # print rotation
 
 ################################################################################
-### Save the allRes dict locally
+### Save the allRes dict & other output locally
 ################################################################################
 for res in allRes:
     res2 = allRes[res]
