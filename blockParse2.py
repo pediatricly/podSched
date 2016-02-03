@@ -1,3 +1,6 @@
+
+###################################################################
+"""
 #! /usr/bin/python
 
 '''
@@ -62,45 +65,10 @@ onChange="document.GetPage.submit();" which must be from a separate .js file
 #################################################################################
 import re
 import csv
+import string
 from bs4 import BeautifulSoup as bs
 import datetime as DT
 import json
-################################################################################
-### Globals & Setup
-################################################################################
-urlList = ['http://amion.com/cgi-bin/ocs?File=!a2fbe090qz^xadkj_x&Page=Block&Fsiz=-2&Sbcid=6',
-           ]
-htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
-    fh = open(blockHTML, 'rb')
-    html = fh.read()
-    print html
-    fh.close()
-# htmlList = ['tester.html']
-# htmlList = ['blockR3.html']
-
-# Specifcy the block 1 split manually because the computer may guess
-# wrong
-block1split1 = DT.date(2015, 7, 6)
-block1split23 = DT.date(2015, 7, 13)
-
-# Regex targets from the Amion block html
-target = '^<TR.+?</tr>'
-TDtar = '<td.+?</td>'
-yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
-classTar = 'R(\d) Block'
-
-# Setup output pieces
-outfile = 'allResStr.py'
-allResStr = {}
-blockStarts23str = 'blockStarts23 = '
-blockStops23str = 'blockStops23 = '
-blockStarts1str = 'blockStarts1 = '
-blockStops1str = 'blockStops1 = '
-updated = 'updated = ' + DT.date.today().isoformat()
-
-# Other globals
-allRes = {}
-week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 #################################################################################
 ### Parser Function
 # Takes list of <td></td> cells from re.findall
@@ -392,22 +360,38 @@ def cellListParser(rowListI):
 # With all those adjustments done, re-sort the schedule list by start Dates
     sortSched = sorted(schedule, key=lambda k: k['startDate'])
     return sortSched
+################################################################################
+### Globals & Setup
+################################################################################
 
-#################################################################################
-### Start loop to read the html input
-#################################################################################
+week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
+allRes = {}
+block1split1 = DT.date(2015, 7, 6)
+block1split23 = DT.date(2015, 7, 13)
+
+target = '^<TR.+?</tr>'
+TDtar = '<td.+?</td>'
+htmlList = ['blockR3.html', 'blockR2.html', 'blockR1.html']
+# htmlList = ['tester.html']
+# htmlList = ['blockR3.html']
+
 # Loop here
 for blockHTML in htmlList:
+    fh = open(blockHTML, 'rb')
+    html = fh.read()
+    fh.close()
     blockStarts = {}
     blockStops = {}
     blockLens = {}
     blockSplits = {}
 #################################################################################
 # Find the years from the Amion block page
+    yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
     years = re.search(yearTar, html, re.I)
     fallYr = int(years.group(1))
     springYr = int(years.group(2))
 
+    classTar = 'R(\d) Block'
     classR = int(re.search(classTar, html, re.I).group(1))
 # re to find the whole table (assumes there's only 1 on the html page
 
@@ -471,21 +455,30 @@ for blockHTML in htmlList:
             blockSplits[block] = blockStarts[block] + DT.timedelta(
                 days=(blockLens[block] / 2))
 
-
-    # This section writes the dates for local use.
-
+    '''
+    This section writes the dates for local use.
     blockStartsStr = {}
     for block in blockStarts:
         blockStartsStr[block] = blockStarts[block].isoformat()
     blockStopsStr = {}
     for block in blockStops:
         blockStopsStr[block] = blockStops[block].isoformat()
-    if classR == 3:
-        blockStarts23str += str(blockStartsStr)
-        blockStops23str += str(blockStopsStr)
-    elif classR == 1:
-        blockStarts1str += str(blockStartsStr)
-        blockStops1str += str(blockStopsStr)
+    with open('blockDates.py', 'a') as fhO:
+        if classR == 3:
+            fhO.write('blockStarts23 = ')
+            fhO.write(str(blockStartsStr))
+            fhO.write('\n')
+            fhO.write('blockStops23 = ')
+            fhO.write(str(blockStopsStr))
+            fhO.write('\n')
+        elif classR == 1:
+            fhO.write('blockStarts1 = ')
+            fhO.write(str(blockStartsStr))
+            fhO.write('\n')
+            fhO.write('blockStops1 = ')
+            fhO.write(str(blockStopsStr))
+            fhO.write('\n')
+    '''
 #################################################################################
 ### Read the main (residents) part of the table
 #################################################################################
@@ -574,6 +567,7 @@ allRes looks like this:
 ################################################################################
 ### Save the allRes dict locally
 ################################################################################
+allResStr = {}
 for res in allRes:
     res2 = allRes[res]
     sched = res2['schedule']
@@ -581,18 +575,9 @@ for res in allRes:
         rotation['startDate'] = rotation['startDate'].isoformat()
         rotation['stopDate'] = rotation['stopDate'].isoformat()
     allResStr[res] = res2
+outfile = 'allResStr.py'
 fhO = open(outfile, 'wb')
-fhO.write('allRes = ' + str(allRes))
-fhO.write('\n')
-fhO.write(blockStarts23str)
-fhO.write('\n')
-fhO.write(blockStops23str)
-fhO.write('\n')
-fhO.write(blockStarts1str)
-fhO.write('\n')
-fhO.write(blockStops1str)
-fhO.write('\n')
-fhO.write(updated)
+fhO.write(str(allRes))
 fhO.write('\n')
 
 '''
@@ -628,3 +613,4 @@ Start output machines (prolly separate scripts):
     (meal allowance, location, hot/cold score, whatever)
     - Weekly lookup - esp for conf lookup, given Monday
 '''
+"""
