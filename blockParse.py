@@ -10,39 +10,38 @@ Marks:
     e - the main loop that goes through the Amion html
     f - data output
 
-Plan (not flow)
-#- Finish the cell parsing - getting close. Next task is to read the multipart
-#cells. Bottom line is assumed to be month minus date range in top lines.
-#If bottom line has a |, block is split in half. Those halves may be broken by
-#top lines.
-#-
-#- Build separate but similar top loop that reads the table date ranges from
-#first row
-#- At some point, use str.isalpha() to strip the =,-,* crap off AmionName
-#
-#Then, for reals - ponder the data structure you want. Maybe:
-#{AmionN-F :
-#  schedule : [
-#    {block : 9,
-#     startDate : 2016,3,7,
-#     stopDate : 2016,3,13,
-#     rotation : 'VAC'},
-#    {block : 9,
-#     startDate: 2016,3,14,
-#     stop...
-#    }],
-#  CoC :
-#     {weekday : 2
-#     weekdayStr : 'Wed'
-#     time: 'pm'
-#     location: 'CARDS'},
-# Amion2-F :
-#  schedule :...
-#}
-#
-#This setup preserves an index for sub-rotations because they are in a list.
-#But it allows multiple to have the same block attribute.
-#
+# Data structure of allRes (main ouput):
+{AmionN-F :
+  'schedule' :
+    [{'startDate': '2015-07-01', 'rotation': 'E-ID', 'stopDate': '2015-07-05',
+      'block': 1, 'bottom': 1}, {'star...}...]
+  'CoC' :
+     {weekday : 2
+     weekdayStr : 'Wed'
+     time: 'pm'
+     location: 'CARDS'},
+   'pgy' : 3
+ }
+
+Notes:
+    - 3feb16: For reasons that blow my mind a little, I noticed different behavior when
+    porting this to CGI. I had audited the schedule scrape pretty well and it
+    seemed to work on the most complex schedules (Chong, Brim, Frank, etc).
+    But, when putting a functionally identical script (ie reading from the
+    scraped Amion html, not the saved source HTML), it gave different output.
+    I'm not sure why. Could be a version issue with Python or BeautifulSoup.
+    What seemed to happen was, locally, split bottoms (eg JEOP | ID) would
+    always get picked up as not simple strings in rowParser and so would be
+    processed as bottoms in cellParser. Somehow, in CGI land, this was not
+    happening. Split bottoms ended up in rowList as a single string and so were
+    treated as 1 rotation with a funny name. (Picked this up by noticing the
+    total # rotations scraped was different on the 2 platforms.)
+    There was a pretty simple solution to this, after a lot of trial.
+    Added if '|' not in soup.string skipped those cells into cellList and so
+    they are processed by the "bottoms" part of cellParser.
+    This update is here in blockParse and in blockParseCGI (CGI3 at the time but
+    now the #s are removed.)
+
 '''
 #################################################################################
 import requests
@@ -73,6 +72,7 @@ block1split23 = DT.date(2015, 7, 13)
 # Setup output pieces
 outfile = 'allResStr.py'
 CoC = 'CoC.csv'
+allRots = 'allRotations.csv'
 allResStr = {}
 blockStarts23str = 'blockStarts23 = '
 blockStops23str = 'blockStops23 = '
@@ -150,7 +150,7 @@ def rowParser(seList):
     rowList = []
     for td in seList:
         soup = bs(td)
-        if soup.string != None:
+        if soup.string != None and '|' not in soup.string:
             soupStr = soup.string
             # Append single entry cells (blocks)
             rowList.append(soupStr.encode('ascii','ignore'))
@@ -177,6 +177,7 @@ def rowParser(seList):
 
             #Append multipart cells
             rowList.append(newList2)
+    # print 'rowList: ' + str(rowList)
     return rowList
 
 #################################################################################
@@ -679,11 +680,14 @@ print '(Should be about 1500.)'
 ### Little in situ output
 ################################################################################
 # Get a list of all rotations in this year's schedule
-# allRotations = set()
-# for res in allRes:
-    # sched = allRes[res]['schedule']
-    # for rot in sched:
-        # allRotations.add(rot['rotation'])
+allRotations = set()
+for res in allRes:
+    sched = allRes[res]['schedule']
+    for rot in sched:
+        allRotations.add(rot['rotation'])
+with open(allRots, 'wb') as outfile:
+    for rot in allRotations:
+        outfile.write(rot + '\n')
 
 # Write the list of CoC days
 with open(CoC, 'wb') as outfile:
