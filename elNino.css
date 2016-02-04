@@ -1,0 +1,194 @@
+html {
+    background-color: rgb(82, 91, 95);
+}
+
+body {
+    margin: 0 auto;
+    padding: 2% 3% 4%;
+    max-width: 800px;
+    font-family: sans-serif;
+    color: rgb(254, 255, 255);
+}
+
+header {
+    text-align: center;
+}
+
+h1, h2, h3, h4, h5, h6 {
+/*    color: rgb(237, 243, 244);*/
+    font-family: serif;
+}
+
+h3, h4, h5, h6 {
+    padding-left: 2%;
+    padding-right: 2%;
+}
+
+#mainIcon {
+    display: inline-block;
+    float: left;
+    width: 45%;
+/*    line-height: 463px;*/
+/*    height: 50px;*/
+/*    vertical-align: middle;*/
+    min-width: 250px;
+    margin: 1%;
+}
+
+h1 {
+/*    height: 75px;*/
+    display: inline-block;
+/*    position: relative;*/
+/*    top: -30px;*/
+/*    min-height: 80px; */
+/*    line-height: 463px;*/
+/*    vertical-align: middle;*/
+/*    float: right;*/
+    }
+
+
+
+/* The Details / Summary Boxes in the Header */
+
+header details {
+    font-size: 18px;
+    clear: both;
+/*    clear: left;*/
+    display: block;
+    padding-left: 3%;
+    padding-right: 3%;
+    border: 1px solid white;
+    padding-top: 0.25%;
+    padding-bottom: 0.25%;
+    margin-top: 0.25%;
+    margin-bottom: 0.25%;
+}
+
+header details p {
+    padding-left: 1.5em;
+    text-indent: -1.5em;
+    text-align: left;
+    font-size: 16px;
+/*    line-height: 20px;*/
+}
+
+header details ul, ol {
+/*    font-weight: bold;*/
+/*    text-decoration: underline;*/
+    font-size: 15px;
+    text-align: left;
+    line-height: 140%;
+}
+
+header details ul ul {
+/*    line-height: 20px;*/
+    font-weight: normal;
+    text-decoration: none;
+    font-size: 14px;
+}
+/*Put summary below details so it inherits details stuff but overrides it.*/
+header summary {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+main {
+    font-size: 18px;
+}
+
+main h2 {
+    text-align: center;
+}
+
+main p {
+    width: 91%;
+    padding-left: 4%;
+    padding-right: 4%;
+}
+
+strong {
+    color: rgb(253, 139, 139);
+/*    font-size: 150%;*/
+}
+
+
+ol, ul {
+    line-height: 155%;
+    margin-left: 3%;
+    margin-right: 3%;
+/*    padding-top: 0%;*/
+}
+
+main ul {
+    font-size: 16px;
+}
+
+main ul ul {
+    font-size: 14px;
+}
+
+a {
+    padding: 0.2%;
+    color: rgb(148, 218, 248);
+    text-decoration: none;
+}
+
+a:hover {
+    background: #b18b8b;
+}
+
+footer {
+    margin-top: 5%;
+    padding: 2%;
+    text-align: center;
+    clear: left;
+}
+
+/* Small screen take over */
+@media only screen 
+    and (max-device-width : 736px) 
+/*736px catches everything up to the iPhone 6 Plus*/
+/*For reasons I don't understand yet, using max-width works when you shrink a browser window but not on the iPhone*/
+{
+    body {
+        padding: inherit;
+/*        background: black;*/
+/*        font-size: 60px;*/
+        font-size: 380%;
+    }
+    
+    h1 {
+        font-size: 120%;
+        }
+        
+    details {
+        display: none;
+/*        visibility: hidden;*/
+    }
+    
+    main {
+        font-size: inherit;
+    }
+    
+    p {
+        padding: inherit;
+/*        font-size: inherit; */
+    }
+    
+    ol, ul {
+        margin: inherit;
+        font-size: inherit;
+    }
+    
+    .pgyClass {
+        display: inline;
+        width: 95%;
+        align-content: stretch;
+    }
+    .pgyClass li {
+        padding: 1%;
+    }
+    footer {
+        font-size: 70%;
+    }
+}

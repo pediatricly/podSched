@@ -43,11 +43,13 @@ Notes:
 
 '''
 #################################################################################
+import os
 import requests
 import re
 import csv
 from bs4 import BeautifulSoup as bs
 import datetime as DT
+from string import Template
 # import json
 ################################################################################
 ### CGI Setup
@@ -59,6 +61,8 @@ print 'Content-Type: text/html\r\n\r\n'
 ################################################################################
 ### Globals & Setup
 ################################################################################
+try: version = os.path.basename(__file__)
+except: version = 'blockParseCGI.py'
 # These parameters feed AmionBlockScraper function to scrape the block schedules
 # out of Amion automatically. All this was reverse engineered on 2Feb16, not
 # sure how stable it is.
@@ -76,6 +80,8 @@ block1split23 = DT.date(2015, 7, 13)
 
 
 # Setup output pieces
+# cwd = os.getcwd()
+# root = cwd[:cwd.find('.com/')+4] + '/elNinoO'
 outfile = 'allResStr.py'
 CoC = 'CoC.csv'
 allRots = 'allRotations.csv'
@@ -85,6 +91,7 @@ blockStops23str = 'blockStops23 = '
 blockStarts1str = 'blockStarts1 = '
 blockStops1str = 'blockStops1 = '
 updated = 'updated = ' + DT.date.today().isoformat()
+htmlTemplate = 'blockParseTemplate.html'
 
 # Other globals
 allRes = {}
@@ -630,6 +637,7 @@ allRes looks like this:
 ################################################################################
 ### Save the allRes dict & other output locally
 ################################################################################
+totRes = str(len(allRes))
 R1str = ''
 R2str = ''
 R3str = ''
@@ -648,6 +656,7 @@ for res in sorted(allRes):
         rotation['startDate'] = rotation['startDate'].isoformat()
         rotation['stopDate'] = rotation['stopDate'].isoformat()
     allResStr[res] = res2
+# fh0 = open(os.path.join(root, outfile), 'wb')
 fhO = open(outfile, 'wb')
 fhO.write('allRes = ' + str(allRes))
 fhO.write('\n')
@@ -672,7 +681,37 @@ fhO = open(outJson, 'wb')
 json.dump(allResStr, fhO)
 '''
 fhO.close()
-print 'Scraped schedule data on ' + str(len(allRes)) + ' residents.'
+# Get a list of all rotations in this year's schedule
+allRotations = set()
+for res in allRes:
+    sched = allRes[res]['schedule']
+    for rot in sched:
+        allRotations.add(rot['rotation'])
+with open(allRots, 'wb') as outfile2:
+    for rot in allRotations:
+        outfile2.write(rot + '\n')
+
+# Write the list of CoC days
+with open(CoC, 'wb') as outfile2:
+    outfile2.write('AmionName,CoC_Day\n')
+    for res in sorted(allRes):
+        outfile2.write(res + ',' + allRes[res]['CoC']['weekdayStr'] + '\n')
+
+
+################################################################################
+### Output to html (or print to stdout)
+################################################################################
+templateVars = dict(version=version, R1str=R1str, R2str=R2str, R3str=R3str,
+                    totRes=totRes, totalRots=totalRots, outfile=outfile,
+                    CoC=CoC, allRots=allRots, updated=updated,
+                    block1split23=block1split23, block1split1=block1split1)
+with open(htmlTemplate, 'r') as temp:
+    htmlTemp = temp.read()
+    finalHTML = Template(htmlTemp).safe_substitute(templateVars)
+    print finalHTML
+
+'''
+print 'Scraped schedule data on ' + totRes + ' residents.'
 print '(Should be about 90.)'
 print 'R1s: ' + R1str[:-2]
 print 'R2s: ' + R2str[:-2]
@@ -681,24 +720,7 @@ print 'Total Rotations: ' + str(totalRots)
 print '(Should be about 1500.)'
 # print blockStarts
 # print blockStops
-
-################################################################################
-### Little in situ output
-################################################################################
-# Get a list of all rotations in this year's schedule
-allRotations = set()
-for res in allRes:
-    sched = allRes[res]['schedule']
-    for rot in sched:
-        allRotations.add(rot['rotation'])
-with open(allRots, 'wb') as outfile:
-    for rot in allRotations:
-        outfile.write(rot + '\n')
-
-# Write the list of CoC days
-with open(CoC, 'wb') as outfile:
-    for res in sorted(allRes):
-        outfile.write(res + ',' + allRes[res]['CoC']['weekdayStr'] + '\n')
+'''
 
 '''
 Note the rounding & half issue, that it may not find the right split dates for
