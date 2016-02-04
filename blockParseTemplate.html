@@ -37,16 +37,18 @@
 <div class="output" id="outputLinks">
 <p>This should have updated these main output files: 
     <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/allResPrinter.py">$outfile</a>
-        <ul><li>NB for superusers: These links are actually to other Python CGI scripts that just prints the data file. You can't directly download the file for security reasons.</li>
-            <li>Contains the main data, all resident schedules and block dates, as a Python file.</li>
+        <ul><li>Contains the main data, all resident schedules and block dates, as a Python file.</li>
             <li>You'll probably never look at this but nice to know it's there. (And to have it for debugging.)</li>
             </ul></li>
         <li><a href="http://pediatricly.com/cgi-bin/elNino/CoCprinter.py">$CoC</a>
             <ul><li>Simple spreadsheet (csv) of all the residents' Amion names with their continuity clinic day as listed in Amion. (NB: Will have weird/missing output for chiefs and super-seniors.)</li>
-                <li>Very useful for the schedule template spreadsheets.</li></ul></li>
+                <li>Very useful for the schedule template spreadsheets.</li>
+                <li>After it loads in your browser, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
         <li><a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py">$allRots</a>
             <ul><li>Even simpler csv, just a list of all the rotations in this year's block schedule across all years.</li>
-                <li>Very useful for the other El Nino functions where you'll need scores or expected values for each rotation.</li></ul></li></ul>
+                <li>Very useful for the other El Nino functions where you'll need scores or expected values for each rotation.</li>
+                <li>Same deal, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
+        <li>NB: These links are actually to other Python CGI scripts that just prints the data file. You can't directly download the files for security reasons.</li></ul>
 </p></div>
 
 <!--Summary Stats Printed Here-->
