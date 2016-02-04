@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python26
 
 '''
 Marks:
@@ -48,9 +48,18 @@ Plan (not flow)
 import requests
 import re
 import csv
-from bs4 import BeautifulSoup as bs
+try:
+    from bs4 import BeautifulSoup as bs
+except: cgitb.handler()
 import datetime as DT
 # import json
+################################################################################
+### CGI Setup
+################################################################################
+import cgi
+import cgitb
+cgitb.enable()
+print 'Content-Type: text/html\r\n\r\n'
 ################################################################################
 ### Globals & Setup
 ################################################################################
