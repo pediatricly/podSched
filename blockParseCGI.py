@@ -50,14 +50,38 @@ import csv
 from bs4 import BeautifulSoup as bs
 import datetime as DT
 from string import Template
+# Import the last saved split dates
+from allResStr import block1split1
+from allResStr import block1split23
 # import json
 ################################################################################
 ### CGI Setup
 ################################################################################
 import cgi
 import cgitb
-cgitb.enable()
 print 'Content-Type: text/html\r\n\r\n'
+cgitb.enable()
+form = cgi.FieldStorage() # instantiate only once!
+
+try:
+    # Get the split dates from CGI, default to previous if none entered
+    block1split1 = form.getfirst('block1split1', block1split1)
+    block1split23 = form.getfirst('block1split23', block1split23)
+    # Avoid script injection escaping the user input
+    block1split1= cgi.escape(block1split1)
+    block1split23= cgi.escape(block1split23)
+    # HTML form brings the whole ISO date format. This strips to just the date.
+    block1split1 = block1split1[:10]
+    block1split23 = block1split23[:10]
+    # Convert to dateime object
+    block1split1= DT.datetime.strptime(block1split1, "%Y-%m-%d")
+    block1split23= DT.datetime.strptime(block1split23, "%Y-%m-%d")
+    # Convert from datetime to date
+    block1split1 = block1split1.date()
+    block1split23 = block1split23.date()
+except:
+    print '<h1>Whoa! Something went wrong with the block1 split date entry!</h1>'
+    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
 ################################################################################
 ### Globals & Setup
 ################################################################################
@@ -75,8 +99,8 @@ secondpart = '&Rsel=-1&Blks=0-0'
 
 # Specifcy the block 1 split manually because the computer may guess
 # wrong
-block1split1 = DT.date(2015, 7, 6)
-block1split23 = DT.date(2015, 7, 13)
+# block1split1 = DT.date(2015, 7, 6)
+# block1split23 = DT.date(2015, 7, 13)
 
 
 # Setup output pieces
@@ -90,7 +114,7 @@ blockStarts23str = 'blockStarts23 = '
 blockStops23str = 'blockStops23 = '
 blockStarts1str = 'blockStarts1 = '
 blockStops1str = 'blockStops1 = '
-updated = 'updated = ' + DT.date.today().isoformat()
+updated = DT.date.today().isoformat()
 htmlTemplate = 'blockParseTemplate.html'
 
 # Other globals
@@ -449,165 +473,173 @@ def cellListParser(rowListI):
 #################################################################################
 # This scrapes Amion & returns dict whose values are the html of the block
 # schedules
-skills = AmionBlockScraper(urlStub, payload, blockTar, firstpart, secondpart, skills)
+try:
+    skills = AmionBlockScraper(urlStub, payload, blockTar, firstpart, secondpart, skills)
+except:
+    print '<h1>Whoa! Something went wrong with the Amion scraper!</h1>'
+    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
 
 # Loop here
-for skill in skills:
-    # Regex targets from the Amion block html
-    target = '^<TR.+?</tr>'
-    TDtar = '<td.+?</td>'
-    yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
-    classTar = 'R(\d) Block'
+try:
+    for skill in skills:
+        # Regex targets from the Amion block html
+        target = '^<TR.+?</tr>'
+        TDtar = '<td.+?</td>'
+        yearTar = 'Schedule, (\d\d\d\d).(\d\d\d\d)'
+        classTar = 'R(\d) Block'
 
-    blockStarts = {}
-    blockStops = {}
-    blockLens = {}
-    blockSplits = {}
-#################################################################################
-# Find the years from the Amion block page
-    html = skills[skill]
-    # print html
-    years = re.search(yearTar, html, re.I)
-    fallYr = int(years.group(1))
-    springYr = int(years.group(2))
+        blockStarts = {}
+        blockStops = {}
+        blockLens = {}
+        blockSplits = {}
+    #################################################################################
+    # Find the years from the Amion block page
+        html = skills[skill]
+        # print html
+        years = re.search(yearTar, html, re.I)
+        fallYr = int(years.group(1))
+        springYr = int(years.group(2))
 
-    classR = int(re.search(classTar, html, re.I).group(1))
-# re to find the whole table (assumes there's only 1 on the html page
+        classR = int(re.search(classTar, html, re.I).group(1))
+    # re to find the whole table (assumes there's only 1 on the html page
 
-    table = re.findall(target, html, re.M)
-    header = table[0]
-    main = table[1:]
-#################################################################################
-### Read the headers to get block start-stop dates
-#################################################################################
-    seHead = re.findall(TDtar, header, re.I)
+        table = re.findall(target, html, re.M)
+        header = table[0]
+        main = table[1:]
+    #################################################################################
+    ### Read the headers to get block start-stop dates
+    #################################################################################
+        seHead = re.findall(TDtar, header, re.I)
 
-    headDates = rowParser(seHead)
-    headDates.pop(0)
-    headDates.pop()
+        headDates = rowParser(seHead)
+        headDates.pop(0)
+        headDates.pop()
 
-    prevMonthStart = 4
-    prevMonthStop = 4
-    yearI = fallYr
-    for cell in headDates:
-        block = int(cell[0])
-        datesRaw = cell[1]
-        datesSplit = datesRaw.split('-')
-        startD = datesSplit[0]
-        startSplit = startD.split('/')
-        startNums = []
-        for num in startSplit:
-            numInt = int(num)
-            startNums.append(numInt)
-        if startNums[0] >= prevMonthStart: pass
-        else: yearI = springYr
-        blockStarts[block] = DT.date(yearI, startNums[0], startNums[1])
-        prevMonthStart = startNums[0]
+        prevMonthStart = 4
+        prevMonthStop = 4
+        yearI = fallYr
+        for cell in headDates:
+            block = int(cell[0])
+            datesRaw = cell[1]
+            datesSplit = datesRaw.split('-')
+            startD = datesSplit[0]
+            startSplit = startD.split('/')
+            startNums = []
+            for num in startSplit:
+                numInt = int(num)
+                startNums.append(numInt)
+            if startNums[0] >= prevMonthStart: pass
+            else: yearI = springYr
+            blockStarts[block] = DT.date(yearI, startNums[0], startNums[1])
+            prevMonthStart = startNums[0]
 
-        stopD = datesSplit[1]
-        stopSplit = stopD.split('/')
-        stopNums = []
-        for num in stopSplit:
-            numInt = int(num)
-            stopNums.append(numInt)
-        if stopNums[0] >= prevMonthStop: pass
-        else: yearI = springYr
-        blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
-        prevMonthStop = stopNums[0]
+            stopD = datesSplit[1]
+            stopSplit = stopD.split('/')
+            stopNums = []
+            for num in stopSplit:
+                numInt = int(num)
+                stopNums.append(numInt)
+            if stopNums[0] >= prevMonthStop: pass
+            else: yearI = springYr
+            blockStops[block] = DT.date(yearI, stopNums[0], stopNums[1])
+            prevMonthStop = stopNums[0]
 
-    lastBlock = max(blockStarts.keys())
+        lastBlock = max(blockStarts.keys())
 
-    # These loops define the mid-date for split blocks. It takes a manual entry for
-    # block1 because it's irregularly shaped (ie doesn't start on Monday).
-    # CAREFUL: this works fine in the 4 week / other blocks start on Mondays world
-    # It might have issues if the block structure changes.
-    for block in blockStarts:
-        bLen = blockStops[block] - blockStarts[block]
-        bLen = round(bLen.days) + 1
-        blockLens[block] = bLen
+        # These loops define the mid-date for split blocks. It takes a manual entry for
+        # block1 because it's irregularly shaped (ie doesn't start on Monday).
+        # CAREFUL: this works fine in the 4 week / other blocks start on Mondays world
+        # It might have issues if the block structure changes.
+        for block in blockStarts:
+            bLen = blockStops[block] - blockStarts[block]
+            bLen = round(bLen.days) + 1
+            blockLens[block] = bLen
 
-    for block in blockStarts:
-        if block == 1:
-            if classR == 1: blockSplits[block] = block1split1
-            else: blockSplits[block] = block1split23
-        else:
-            blockSplits[block] = blockStarts[block] + DT.timedelta(
-                days=(blockLens[block] / 2))
+        for block in blockStarts:
+            if block == 1:
+                if classR == 1: blockSplits[block] = block1split1
+                else: blockSplits[block] = block1split23
+            else:
+                blockSplits[block] = blockStarts[block] + DT.timedelta(
+                    days=(blockLens[block] / 2))
 
 
-    # This section writes the dates for local use.
+        # This section writes the dates for local use.
 
-    blockStartsStr = {}
-    for block in blockStarts:
-        blockStartsStr[block] = blockStarts[block].isoformat()
-    blockStopsStr = {}
-    for block in blockStops:
-        blockStopsStr[block] = blockStops[block].isoformat()
-    if classR == 3:
-        blockStarts23str += str(blockStartsStr)
-        blockStops23str += str(blockStopsStr)
-    elif classR == 1:
-        blockStarts1str += str(blockStartsStr)
-        blockStops1str += str(blockStopsStr)
-#################################################################################
-### Read the main (residents) part of the table
-#################################################################################
+        blockStartsStr = {}
+        for block in blockStarts:
+            blockStartsStr[block] = blockStarts[block].isoformat()
+        blockStopsStr = {}
+        for block in blockStops:
+            blockStopsStr[block] = blockStops[block].isoformat()
+        if classR == 3:
+            blockStarts23str += str(blockStartsStr)
+            blockStops23str += str(blockStopsStr)
+        elif classR == 1:
+            blockStarts1str += str(blockStartsStr)
+            blockStops1str += str(blockStopsStr)
+    #################################################################################
+    ### Read the main (residents) part of the table
+    #################################################################################
 
-    for line in main:
-# Grabs all the TD tags (cells) in the given row
-        se2 = re.findall(TDtar, line, re.I)
+        for line in main:
+    # Grabs all the TD tags (cells) in the given row
+            se2 = re.findall(TDtar, line, re.I)
 
-# Parses those TD tags into a list of block (cells) like the eg below
-        rowListIn = rowParser(se2)
-        '''
-        List of the table row's cells where multipart cells are list items.
-        Ainsworth-A=
-        E-CICU
-        PICU3
-        SFN3
-        ['VAC', '| SFX']
-        SFO3
-        SFO3
-        PURPLE3
-        PURPLE3
-        ['VAC', '3/7-3/13', 'JEOP | E-Pulm']
-        ['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
-        ['VAC', '5/2-5/8', 'CHO-ICU']
-        ICN3
-        Chief
-        '''
+    # Parses those TD tags into a list of block (cells) like the eg below
+            rowListIn = rowParser(se2)
+            '''
+            List of the table row's cells where multipart cells are list items.
+            Ainsworth-A=
+            E-CICU
+            PICU3
+            SFN3
+            ['VAC', '| SFX']
+            SFO3
+            SFO3
+            PURPLE3
+            PURPLE3
+            ['VAC', '3/7-3/13', 'JEOP | E-Pulm']
+            ['CHO-ICU', '4/4-4/10', 'JEOP | CARDS']
+            ['VAC', '5/2-5/8', 'CHO-ICU']
+            ICN3
+            Chief
+            '''
 
-# Pop off the AmionName from the first cell of the row
-        AmionName = rowListIn.pop(0)
-        if AmionName[-1].isalpha() == False:
-            AmionName = AmionName[:-1]
-        if AmionName[0].isalpha() == False: continue
-# Pop off & parse to dict the Coc date from the last cell
-        CoCRaw = rowListIn.pop(lastBlock)
-        CoCweekDayStr = CoCRaw[:3]
-        CoCTime = CoCRaw[3:5]
-        CoCLoc = CoCRaw[5:]
-        try: CoCweekDay = week[CoCweekDayStr]
-        except KeyError: CoCweekDay = None
+    # Pop off the AmionName from the first cell of the row
+            AmionName = rowListIn.pop(0)
+            if AmionName[-1].isalpha() == False:
+                AmionName = AmionName[:-1]
+            if AmionName[0].isalpha() == False: continue
+    # Pop off & parse to dict the Coc date from the last cell
+            CoCRaw = rowListIn.pop(lastBlock)
+            CoCweekDayStr = CoCRaw[:3]
+            CoCTime = CoCRaw[3:5]
+            CoCLoc = CoCRaw[5:]
+            try: CoCweekDay = week[CoCweekDayStr]
+            except KeyError: CoCweekDay = None
 
-# Setup data structures for ea resident/row of the table
-        CoCDict = {'weekday' : CoCweekDay,
-                'weekdayStr' : CoCweekDayStr,
-                'time' : CoCTime,
-                'location' : CoCLoc}
-        # resDict = {AmionName : {
-        resDict = {
-                    'pgy' : classR,
-                'schedule' : [],
-                'CoC' : CoCDict}
-        schedule = []
+    # Setup data structures for ea resident/row of the table
+            CoCDict = {'weekday' : CoCweekDay,
+                    'weekdayStr' : CoCweekDayStr,
+                    'time' : CoCTime,
+                    'location' : CoCLoc}
+            # resDict = {AmionName : {
+            resDict = {
+                        'pgy' : classR,
+                    'schedule' : [],
+                    'CoC' : CoCDict}
+            schedule = []
 
-# Finally, put the sorted rotations list into the current resDict
-        sortSchedOut = cellListParser(rowListIn)
-        resDict['schedule'] = sortSchedOut
-# And add the whole resident's info to the main dict
-        allRes[AmionName] = resDict
+    # Finally, put the sorted rotations list into the current resDict
+            sortSchedOut = cellListParser(rowListIn)
+            resDict['schedule'] = sortSchedOut
+    # And add the whole resident's info to the main dict
+            allRes[AmionName] = resDict
 
+except:
+    print '<h1>Whoa! Something went wrong with the main parsing functions!</h1>'
+    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
 '''
 allRes looks like this:
 {'Brim-R' :
@@ -637,79 +669,82 @@ allRes looks like this:
 ################################################################################
 ### Save the allRes dict & other output locally
 ################################################################################
-totRes = str(len(allRes))
-R1str = ''
-R2str = ''
-R3str = ''
-totalRots = 0
-for res in sorted(allRes):
-    if allRes[res]['pgy'] == 1:
-        R1str = R1str + res + ', '
-    elif allRes[res]['pgy'] == 2:
-        R2str = R2str + res + ', '
-    elif allRes[res]['pgy'] == 3:
-        R3str = R3str + res + ', '
-    res2 = allRes[res]
-    sched = res2['schedule']
-    for rotation in sched:
-        totalRots += 1
-        rotation['startDate'] = rotation['startDate'].isoformat()
-        rotation['stopDate'] = rotation['stopDate'].isoformat()
-    allResStr[res] = res2
-# fh0 = open(os.path.join(root, outfile), 'wb')
-fhO = open(outfile, 'wb')
-fhO.write('allRes = ' + str(allRes))
-fhO.write('\n')
-fhO.write(blockStarts23str)
-fhO.write('\n')
-fhO.write(blockStops23str)
-fhO.write('\n')
-fhO.write(blockStarts1str)
-fhO.write('\n')
-fhO.write(blockStops1str)
-fhO.write('\n')
-fhO.write(updated)
-fhO.write('\n')
-fhO.write('block1split1 = ' + str(block1split1))
-fhO.write('\n')
-fhO.write('block1split23 = ' + str(block1split23))
-fhO.write('\n')
-
-'''
-outJson = 'allResJson.txt'
-fhO = open(outJson, 'wb')
-json.dump(allResStr, fhO)
-'''
-fhO.close()
-# Get a list of all rotations in this year's schedule
-allRotations = set()
-for res in allRes:
-    sched = allRes[res]['schedule']
-    for rot in sched:
-        allRotations.add(rot['rotation'])
-with open(allRots, 'wb') as outfile2:
-    for rot in allRotations:
-        outfile2.write(rot + '\n')
-
-# Write the list of CoC days
-with open(CoC, 'wb') as outfile2:
-    outfile2.write('AmionName,CoC_Day\n')
+try:
+    totRes = str(len(allRes))
+    R1str = ''
+    R2str = ''
+    R3str = ''
+    totalRots = 0
     for res in sorted(allRes):
-        outfile2.write(res + ',' + allRes[res]['CoC']['weekdayStr'] + '\n')
+        if allRes[res]['pgy'] == 1:
+            R1str = R1str + res + ', '
+        elif allRes[res]['pgy'] == 2:
+            R2str = R2str + res + ', '
+        elif allRes[res]['pgy'] == 3:
+            R3str = R3str + res + ', '
+        res2 = allRes[res]
+        sched = res2['schedule']
+        for rotation in sched:
+            totalRots += 1
+            rotation['startDate'] = rotation['startDate'].isoformat()
+            rotation['stopDate'] = rotation['stopDate'].isoformat()
+        allResStr[res] = res2
+    # fh0 = open(os.path.join(root, outfile), 'wb')
+    fhO = open(outfile, 'wb')
+    fhO.write('allRes = ' + str(allRes))
+    fhO.write('\n')
+    fhO.write(blockStarts23str)
+    fhO.write('\n')
+    fhO.write(blockStops23str)
+    fhO.write('\n')
+    fhO.write(blockStarts1str)
+    fhO.write('\n')
+    fhO.write(blockStops1str)
+    fhO.write('\n')
+    fhO.write("updated = '" + str(updated) + "'")
+    fhO.write('\n')
+    fhO.write("block1split1 = '" + str(block1split1) + "'")
+    fhO.write('\n')
+    fhO.write("block1split23 = '" + str(block1split23) + "'")
+    fhO.write('\n')
+
+    '''
+    outJson = 'allResJson.txt'
+    fhO = open(outJson, 'wb')
+    json.dump(allResStr, fhO)
+    '''
+    fhO.close()
+    # Get a list of all rotations in this year's schedule
+    allRotations = set()
+    for res in allRes:
+        sched = allRes[res]['schedule']
+        for rot in sched:
+            allRotations.add(rot['rotation'])
+    with open(allRots, 'wb') as outfile2:
+        for rot in allRotations:
+            outfile2.write(rot + '\n')
+
+    # Write the list of CoC days
+    with open(CoC, 'wb') as outfile2:
+        outfile2.write('AmionName,CoC_Day\n')
+        for res in sorted(allRes):
+            outfile2.write(res + ',' + allRes[res]['CoC']['weekdayStr'] + '\n')
 
 
-################################################################################
-### Output to html (or print to stdout)
-################################################################################
-templateVars = dict(version=version, R1str=R1str, R2str=R2str, R3str=R3str,
-                    totRes=totRes, totalRots=totalRots, outfile=outfile,
-                    CoC=CoC, allRots=allRots, updated=updated,
-                    block1split23=block1split23, block1split1=block1split1)
-with open(htmlTemplate, 'r') as temp:
-    htmlTemp = temp.read()
-    finalHTML = Template(htmlTemp).safe_substitute(templateVars)
-    print finalHTML
-
+    ################################################################################
+    ### Output to html (or print to stdout)
+    ################################################################################
+    templateVars = dict(version=version, R1str=R1str, R2str=R2str, R3str=R3str,
+                        totRes=totRes, totalRots=totalRots, outfile=outfile,
+                        CoC=CoC, allRots=allRots, updated=updated,
+                        block1split23=block1split23, block1split1=block1split1)
+    with open(htmlTemplate, 'r') as temp:
+        htmlTemp = temp.read()
+        finalHTML = Template(htmlTemp).safe_substitute(templateVars)
+        print finalHTML
+except:
+    print '<h1>Whoa! Something went wrong with the Amion scraper!</h1>'
+    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
 '''
 print 'Scraped schedule data on ' + totRes + ' residents.'
 print '(Should be about 90.)'
