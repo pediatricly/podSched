@@ -2,17 +2,17 @@
 <html>
       <head>
               <meta charset="utf-8">
-              <meta name="description" content="Block Schedule Updater - El Nino - UCSF Peds">
+              <meta name="description" content="Lunch Money - El Nino - UCSF Peds">
               <link rel="stylesheet" href="../../css/elNino.css">
 
-	      <title>el Nino - Block Schedule Updater</title>
+	      <title>El Nino - Lunch Money</title>
       </head>
 
       <body>
 		<header>
 		<figure><img src = "http://www.pediatricly.com/images/elNinoLogo.jpg" width = "40%" alt = "I am the mighty El Nino" id="mainIcon"/></figure>
             <h1>I am the mighty El Nino!<br>
-            Schedule Updater</h1>
+            Lunch Money</h1>
             <div id="subtitle"><h3>For those of you who no habla espanol, El Nino is Spanish for...The Nino.</h3></div>
     
             <nav><ul><li><a href="http://pediatricly.com/cgi-bin/elNino/elNinoMain.py">Main</a></li>
@@ -21,7 +21,7 @@
         <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingPlanner.py">Meeting Planner</a></li>
         </ul></nav>
             
-            <details><summary>How does El Nino work?</summary>
+             <details><summary>How does El Nino work?</summary>
             <p>El Nino reads the messy schedule data on the Amion website and turns it into something only a robot could love - beautifully elaborate, machine-readable data on the entire residency program's schedule. This has some great uses:
                 <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
                         <ul><li>Tally up how much cash to put on meal cards based on their rotation week-by-week.</li>
@@ -38,32 +38,35 @@
 </header>
 
 <main>
-<h2>This is where you can update El Nino's database</h2>
-<h3>Updates are big deal:</h3>
-    <ul><li>El Nino reads the schedule from Amion and saves its own data.</li>
-    <li>El Nino uses those data for its various functions.</li>
-    <li>Of course, Amion changes all the time...</li>
-    <li>So it's important to update El Nino before using it for critical tasks (e.g., assigning lunch money).</li></ul>
+<h2>El Nino has just calculated all the resident meal card allotments you requested.</h2>
+
+<div class="output" id="outputLinks">
+<p>This should have updated these main output files: 
+    <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyOutPrinter.py" target="_blank">$csvOutFile</a>
+        <ul><li>Contains the main data, allotments resident by block, in csv format.</li>
+            <li>After it loads in your browser, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">$rotCashcsv</a>
+        <ul><li>View the current csv of meal cash allotments by rotation that El Nino used.</li></ul>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyErrsPrinter.py" target="_blank">$errFile</a>
+            <ul><li>Simple text output of errors this program encounter. Such errors occur when a resident has blanks in their schedule data, e.g., super-seniors have a bunch of blank blocks after they graduated. This file logs them for debugging.</li></ul></li></ul></p>    </div>
+
     
-<!--Main output files from blockParse are linked here.-->
-<div class="output" id="updated">
-    <h3>El Nino was last updated on:</h3> 
-    <ul><li>$updated (yyyy-mm-dd)</li></ul></div>
-
-<div class="output" id="blockSplits">
-<h3>Block 1 Split Dates</h3>
-    <p>El Nino can figure out most of the block schedule, but it needs you to set the "split dates" for block 1. You should only have to set this manually once a year in July.<br>
-    Split dates are the Mondays when half blocks (eg JEOP | SFX) start. Because block 1 rarely starts on a Monday, el Nino needs you to tell it when to split block 1 (for both the R1 and R2/3 schedules).<br>
-
-<div class="input" id="blockSplitForm">
-<form method="get" action="blockParseCGI.py">
-<div class="prompt">Block 1 Split, R1: </div><input type="date" name="block1split1" min="2015-07-01" max="2050-06-30"><div class="currentSet">  Currently set to $block1split1</div><br>
-<div class="prompt">Block 1 Split, R2/3s: </div><input type="date" name="block1split23" min="2015-07-01" max="2050-06-30"><div class="currentSet">  Currently set to $block1split23</div><br>
-If those current dates are still accurate, leave this blank and hit Submit to update the database.</p></div>
-<input type="submit" value="Submit"></form>
-    </div>
+    
+<div class="output" id="summaryStats">
+<p>Summary data:
+    <ul><li>This is based on main schedule data last updated $updated (yyyy-mm-dd).</li>
+        <ul><li>If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</li></ul>
+        <li>Rotations file: $message. This file is saved on the server as $rotCashcsv.</li>
+        <li>You asked for data on PGY classes $classesStr</li>
+        <li>You asked for data from block $firstBlock through block $lastBlock.</li></ul>
+To re-do any of those parameters, return to the <a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money Form</a>.</p></div>
+    
 </main>
-              <footer><p>This the mighty El Nino - Schedule Updater.<br>
+
+    
+    
+    
+    <footer><p>This the mighty El Nino - Lunch Money.<br>
               This page was generated by a program called $version.<br>
               Developed by Mike in February 2015. <a href="http://lnkd.in/sCnSZw">Ping him</a> for feedback &amp; suggestions.</p>
               <p>Looking beyond El Nino?<br>

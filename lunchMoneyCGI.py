@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python26
 
 '''
 import allRes
@@ -34,9 +34,10 @@ output:
 
 Can then add that up by whatever chunks they want
 '''
-
+import os.path
 import csv
 import datetime as DT
+from string import Template
 from allResStr import allRes
 from allResStr import blockStarts23
 from allResStr import blockStops23
@@ -44,19 +45,73 @@ from allResStr import blockStarts1
 from allResStr import blockStops1
 from allResStr import updated
 from blockUtils import blockLookup
+from rotCashUpdate import rotCashUpdate
 #########################################################
 ### Define Globals
 ##########################################################
+try: version = os.path.basename(__file__)
+except: version = 'lunchMoneyCGI.py'
 # Parameters
-firstBlock = 8
+firstBlock = 1
 lastBlock = 13
 classes = [1, 2, 3] # Gives option to break up by class year
 rotCashcsv = 'foodCashByWeek.csv' # csv file for the $ by rotation
+rotCashUpdateFile = 'rotCashUpdate.py'
 # Should look like:
 # Rotation, cashByWk (header row, doesn't matter what they're called)
 # 'ADOL','24' (rows by rotation, second column needs to be a number. It's read
 # as a string but will be converted to float below)
 csvOutFile = 'lunchMoneyOut.csv'
+errFile = 'lunchMoneyErrors.txt'
+htmlTemplate = 'lunchMoneyTemplate.html'
+###############################################################################
+### CGI Setup
+################################################################################
+import cgi
+import cgitb
+print 'Content-Type: text/html\r\n\r\n'
+cgitb.enable()
+form = cgi.FieldStorage() # instantiate only once!
+
+# try:
+    # Get the split dates from CGI, default to previous if none entered
+firstBlockIn = form.getfirst('firstBlock', '')
+lastBlockIn = form.getfirst('lastBlock', '')
+classesIn = form.getlist('classI')
+# except:
+    # print '<h1>Whoa! Something went wrong with the data entry!</h1>'
+    # print '<h1>If you are seeing this message, please double the data you entered, the output summary below and try again. If you still get this error, contact Mike. :(</h1>'
+    # Avoid script injection escaping the user input
+
+if firstBlockIn != '':
+    firstBlock = int(cgi.escape(firstBlockI))
+if lastBlockIn != '':
+    lastBlock = int(cgi.escape(lastBlockI))
+
+if len(classesIn) > 0:
+    classes = []
+    for classI in classesIn:
+        classI = int(cgi.escape(classI))
+        classes.append(classI)
+
+############  File Upload ###################################
+fileitem = form['foodCashNew']
+
+# Test if the file was uploaded
+if fileitem.filename:
+
+    # strip leading path from file name
+    # to avoid directory traversal attacks
+    fn = os.path.basename(fileitem.filename)
+    open(rotCashcsv, 'wb').write(fileitem.file.read())
+    message = ('The file "' + fn + '" was uploaded successfully and saved as '
+               + rotCashcsv)
+    rotCashUpdate = DT.date.today().isoformat()
+    with open(rotCashUpdateFile, 'wb') as out:
+        out.write("rotCashUpdate = '" + str(rotCashUpdate) + "'\n")
+        # print "rotCashUpdate = '" + str(rotCashUpdate) + "'\n"
+else:
+    message = 'No new cash by rotations file was uploaded - used the version uploaded on %s' % rotCashUpdate
 
 ##########################################################
 # Setup the basic intake data
@@ -88,10 +143,16 @@ for res in allRes:
     if allRes[res]['pgy'] in classes:
         data[res] = resDict
 ##########################################################
+# Open the error file so you can write failures in this loop somewhere
+# These failures are usually missing schedule data. Eg. super senior have many
+# empty blocks in Amion and that produces an error in the try blocks below
+errHandler = open(errFile, 'wb')
 
 # This does the actual rotation lookup & adds up cash going week by week
 # (Mondays) through the given date range.
+classesStr = ''
 for pgyYr in classes:
+    classesStr = classesStr + str(pgyYr) + ', '
     if pgyYr == 1:
         starts = blockStarts1
         stops = blockStops1
@@ -118,23 +179,47 @@ for pgyYr in classes:
                 try: cashRot = cashData[rotation]
                 except:
                     cashRot = 0
-                    print res, tupule
+                    # print res, tupule
+                    errHandler.write(res)
+                    errHandler.write(str(tupule) + '\n')
+                    # errHandler.write(res + str(tupule) + '\n')
                 try: data[res][block] += cashRot
                 except: pass
                 tracker = tracker + increment
 # print data
-
+errHandler.close()
+classesStr = classesStr[:-2]
 #########################################################
 ### Write the output data
 ##########################################################
 with open(csvOutFile, 'wb') as csvOut:
     writer = csv.writer(csvOut, delimiter=',')
     writer.writerow(headers)
+    # print headers
+    # print '<br>'
     for res in sorted(data):
         row = [res]
         for block in blocks:
             row.append(data[res][block])
         writer.writerow(row)
+        # print row
+        # print '<br>'
 # print data
 
-# print allRes['co']
+# print allRes['co'
+try:
+    ################################################################################
+    ### Output to html (or print to stdout)
+    ################################################################################
+    templateVars = dict(version=version, message=message, csvOutFile=csvOutFile,
+                        errFile=errFile, rotCashcsv=rotCashcsv, updated=updated,
+                        rotCashUpdate=rotCashUpdate, classesStr=classesStr,
+                        firstBlock=str(firstBlock), lastBlock=str(lastBlock))
+    with open(htmlTemplate, 'r') as temp:
+        htmlTemp = temp.read()
+        finalHTML = Template(htmlTemp).safe_substitute(templateVars)
+        print finalHTML
+except:
+    print '<h1>Whoa! Something went wrong with the data output!</h1>'
+    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
+

@@ -16,7 +16,7 @@ header {
 
 h1, h2, h3, h4, h5, h6 {
 /*    color: rgb(237, 243, 244);*/
-    font-family: serif;
+    font-family: sans-serif;
 }
 
 h3, h4, h5, h6 {
@@ -46,7 +46,43 @@ h1 {
 /*    float: right;*/
     }
 
+nav {
+    clear: left;
+    margin: 1%;
+/*    display: inline-block;*/
+    
+}
 
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgb(85, 85, 85);
+    background-color: rgb(83, 66, 66);
+    padding: 1%;
+    border-radius: 15px;
+}
+
+nav li {
+    display: inline;
+    text-align: center;
+/*    border-bottom: 1px solid rgb(85, 85, 85);*/
+    border-right: 1px solid rgb(187, 187, 187);
+    padding: inherit;
+}
+
+li:last-child {
+    border-right: none;
+}
+
+nav li a {
+        padding: inherit;
+}
+
+nav li a:hover {
+    background-color: rgb(85, 85, 85);
+    color: white;
+}
 
 /* The Details / Summary Boxes in the Header */
 

@@ -2,10 +2,10 @@
 <html>
       <head>
               <meta charset="utf-8">
-              <meta name="description" content="Block Schedule Updatr - El Nino - UCSF Peds">
+              <meta name="description" content="Block Schedule Updater - El Nino - UCSF Peds">
               <link rel="stylesheet" href="../../css/elNino.css">
 
-	      <title>el Nino - Block Schedule Updater</title>
+	      <title>El Nino - Block Schedule Updater</title>
       </head>
 
       <body>
@@ -15,19 +15,25 @@
             Schedule Updater</h1>
             <div id="subtitle"><h3>For those of you who no habla espanol, El Nino is Spanish for...The Nino.</h3></div>
      
-            <details><summary>How does El Nino work?</summary>
+            <nav><ul><li><a href="http://pediatricly.com/cgi-bin/elNino/elNinoMain.py">Main</a></li>
+            <li><a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingPlanner.py">Meeting Planner</a></li>
+        </ul></nav>
+            
+             <details><summary>How does El Nino work?</summary>
             <p>El Nino reads the messy schedule data on the Amion website and turns it into something only a robot could love - beautifully elaborate, machine-readable data on the entire residency program's schedule. This has some great uses:
-                <ul><li>lunchMoney
+                <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
                         <ul><li>Tally up how much cash to put on meal cards based on their rotation week-by-week.</li>
                         </ul></li>
-                    <li>confAttend
+                    <li>confAttend - not available online yet
                         <ul><li>Get the "denominator" for conference attendence. Count up how many conferences residents should have attended based on their block schedules.</li>
                         </ul></li>
-                    <li>podSched
+                    <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingPlanner.py">Meeting Planner</a>
                         <ul><li>Getting multiple residents on different schedules in the same place at the same time is a pain!</li>
-                            <li>podSched goes through an arbitrary subset of residents' schedules and outputs a ranked, scored list of dates when they are on the most aligned and convenient rotations.</li>
+                            <li>Meeting Planner goes through an arbitrary subset of residents' schedules and outputs a ranked, scored list of dates when they are on the most aligned and convenient rotations.</li>
                             <li>For example, if you want to schedule an evening meeting, you can score for shifts that end around 5pm to pick an evening when everyone is available. (Hence the name - this was developed to schedule PLUS pod dinners.)</li>                           </ul></li></ul></p>
-            <p>BUT, to do any of this, you need to make sure El Nino is working with an updated schedule. We all know the Amion schedule changes frequently. And that's why you are here.</p></details>
+            <p>BUT, to do any of this, you need to make sure El Nino is working with an updated schedule. We all know the Amion schedule changes frequently. And that's why it all starts with <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a>.</p></details>
             
 </header>
 
@@ -36,15 +42,15 @@
 <!--Main output files from blockParse are linked here.-->
 <div class="output" id="outputLinks">
 <p>This should have updated these main output files: 
-    <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/allResPrinter.py">$outfile</a>
+    <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/allResPrinter.py" target="_blank">$outfile</a>
         <ul><li>Contains the main data, all resident schedules and block dates, as a Python file.</li>
             <li>You'll probably never look at this but nice to know it's there. (And to have it for debugging.)</li>
             </ul></li>
-        <li><a href="http://pediatricly.com/cgi-bin/elNino/CoCprinter.py">$CoC</a>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/CoCprinter.py" target="_blank">$CoC</a>
             <ul><li>Simple spreadsheet (csv) of all the residents' Amion names with their continuity clinic day as listed in Amion. (NB: Will have weird/missing output for chiefs and super-seniors.)</li>
                 <li>Very useful for the schedule template spreadsheets.</li>
                 <li>After it loads in your browser, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
-        <li><a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py">$allRots</a>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">$allRots</a>
             <ul><li>Even simpler csv, just a list of all the rotations in this year's block schedule across all years.</li>
                 <li>Very useful for the other El Nino functions where you'll need scores or expected values for each rotation.</li>
                 <li>Same deal, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>

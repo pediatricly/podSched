@@ -43,7 +43,7 @@ Notes:
 
 '''
 #################################################################################
-import os
+import os.path
 import requests
 import re
 import csv
@@ -97,15 +97,12 @@ skills = {'2': '', '3': '', '4':''}
 firstpart = "&Page=Block&Sbcid=6&Skill="
 secondpart = '&Rsel=-1&Blks=0-0'
 
-# Specifcy the block 1 split manually because the computer may guess
-# wrong
+# Specifcy the block 1 split manually because the computer may guess wrong
 # block1split1 = DT.date(2015, 7, 6)
 # block1split23 = DT.date(2015, 7, 13)
 
 
 # Setup output pieces
-# cwd = os.getcwd()
-# root = cwd[:cwd.find('.com/')+4] + '/elNinoO'
 outfile = 'allResStr.py'
 CoC = 'CoC.csv'
 allRots = 'allRotations.csv'
@@ -689,7 +686,6 @@ try:
             rotation['startDate'] = rotation['startDate'].isoformat()
             rotation['stopDate'] = rotation['stopDate'].isoformat()
         allResStr[res] = res2
-    # fh0 = open(os.path.join(root, outfile), 'wb')
     fhO = open(outfile, 'wb')
     fhO.write('allRes = ' + str(allRes))
     fhO.write('\n')
@@ -743,7 +739,7 @@ try:
         finalHTML = Template(htmlTemp).safe_substitute(templateVars)
         print finalHTML
 except:
-    print '<h1>Whoa! Something went wrong with the Amion scraper!</h1>'
+    print '<h1>Whoa! Something went wrong with the data output!</h1>'
     print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
 '''
 print 'Scraped schedule data on ' + totRes + ' residents.'
