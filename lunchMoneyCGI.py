@@ -63,6 +63,9 @@ rotCashUpdateFile = 'rotCashUpdate.py'
 # as a string but will be converted to float below)
 csvOutFile = 'lunchMoneyOut.csv'
 errFile = 'lunchMoneyErrors.txt'
+title = 'Lunch Money'
+subtitle = 'Results Form'
+frameTemplate = 'elNinoFrame.html'
 htmlTemplate = 'lunchMoneyTemplate.html'
 ###############################################################################
 ### CGI Setup
@@ -211,14 +214,22 @@ try:
     ################################################################################
     ### Output to html (or print to stdout)
     ################################################################################
-    templateVars = dict(version=version, message=message, csvOutFile=csvOutFile,
+    templateVars = dict(message=message, csvOutFile=csvOutFile,
                         errFile=errFile, rotCashcsv=rotCashcsv, updated=updated,
                         rotCashUpdate=rotCashUpdate, classesStr=classesStr,
                         firstBlock=str(firstBlock), lastBlock=str(lastBlock))
+    main = ''
     with open(htmlTemplate, 'r') as temp:
+        htmlTemp = temp.read()
+        main = Template(htmlTemp).safe_substitute(templateVars)
+
+    templateVars = dict(version=version, title=title, subtitle=subtitle, main=main
+                    )
+    with open(frameTemplate, 'r') as temp:
         htmlTemp = temp.read()
         finalHTML = Template(htmlTemp).safe_substitute(templateVars)
         print finalHTML
+
 except:
     print '<h1>Whoa! Something went wrong with the data output!</h1>'
     print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'

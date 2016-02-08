@@ -112,6 +112,9 @@ blockStops23str = 'blockStops23 = '
 blockStarts1str = 'blockStarts1 = '
 blockStops1str = 'blockStops1 = '
 updated = DT.date.today().isoformat()
+title = 'Updater'
+subtitle = 'blockParse Output'
+frameTemplate = 'elNinoFrame.html'
 htmlTemplate = 'blockParseTemplate.html'
 
 # Other globals
@@ -730,11 +733,18 @@ try:
     ################################################################################
     ### Output to html (or print to stdout)
     ################################################################################
-    templateVars = dict(version=version, R1str=R1str, R2str=R2str, R3str=R3str,
+    templateVars = dict(R1str=R1str, R2str=R2str, R3str=R3str,
                         totRes=totRes, totalRots=totalRots, outfile=outfile,
                         CoC=CoC, allRots=allRots, updated=updated,
                         block1split23=block1split23, block1split1=block1split1)
+    main = ''
     with open(htmlTemplate, 'r') as temp:
+        htmlTemp = temp.read()
+        main = Template(htmlTemp).safe_substitute(templateVars)
+
+    templateVars = dict(version=version, title=title, subtitle=subtitle, main=main)
+
+    with open(frameTemplate, 'r') as temp:
         htmlTemp = temp.read()
         finalHTML = Template(htmlTemp).safe_substitute(templateVars)
         print finalHTML

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+      <head>
+              <meta charset="utf-8">
+              <meta name="description" content="$title - El Nino - UCSF Peds">
+              <link rel="stylesheet" href="../../css/elNino.css">
+
+	      <title>El Nino - Meeting Form Tester</title>
+      </head>
+
+      <body>
+
+<h2>Enter your Meeting Planner parameters here.</h2>
+    
+<div class="output" id="updated">
+    <h3>Remember, you should make sure El Nino is up to date first.<br>
+    El Nino was last updated on:</h3> 
+    <ul><li><strong>$updated</strong> (yyyy-mm-dd)</li></ul></div>
+
+<div class="input" id="meetingForm">
+<form method="post" action="schedTester.py">
+<p id="mainForm">
+    <div class="prompt">Search Start Date: </div><input type="date" name="startDate" min="2015-07-01" max="2050-06-30"> Optional - defaults to today.
+    <div class="prompt">Search Stop Date: </div><input type="date" name="endDate" min="2015-07-01" max="2050-06-30"> Optional - defaults to 60 days from today.<br>
+
+    Check this box to include weekends as candidate dates: <input type="checkbox" name="weekends" value="1"> Default ignores weekends.<br>
+
+    How many candidate dates would you like El Nino to return? <input type="number" name="candidates" min="1" max="100"> Optional - defaults to 15 days. (Careful, El Nino may react strangely if you request more candidate dates than you allow days to search.)</p>
+
+<p id="AmNamesForm">
+    $AmNamesForm</p>
+<p id="optionalForm">
+Vacation Start 1: <input type="date" name="vacStart" min="2015-07-01" max="2050-06-30">
+<!--    <div class="currentSet">  Currently set to $block1split1</div><br>-->
+Vacation Stop 1: <input type="date" name="vacStop" min="2015-07-01" max="2050-06-30"><br>
+Vacation Start 2: <input type="date" name="vacStart" min="2015-07-01" max="2050-06-30">
+Vacation Stop 2: <input type="date" name="vacStop" min="2015-07-01" max="2050-06-30"></p>
+
+<input type="submit" value="Submit"></form>
+    </div>
+    </body>
+</html>
