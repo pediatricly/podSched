@@ -64,10 +64,10 @@ import datetime as DT
 import os.path
 from allResStr import allRes as allRes
 # from shalStr import aString as allRes
-from blockDates import blockStarts23
-from blockDates import blockStops23
-from blockDates import blockStarts1
-from blockDates import blockStops1
+from allResStr import blockStarts23
+from allResStr import blockStops23
+from allResStr import blockStarts1
+from allResStr import blockStops1
 from blockUtils import blockLookup
 #########################################################
 ### Define Globals
@@ -154,9 +154,15 @@ for item in masterSet:
     colon1 = time1.find(':')
     colon2 = time1.find(':', colon1+1)
     if ap == 'PM' or ap =='pm':
-        time = DT.time(int(time1[:colon1])+12, int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
+        if int(time1[:colon1]) == 12: #Noon is PM but should not have 12 added
+            time = DT.time(int(time1[:colon1]), int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
+        else: #Other PM times needs conversion to 24-hr
+            time = DT.time(int(time1[:colon1])+12, int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
     else:
-        time = DT.time(int(time1[:colon1]), int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
+        if int(time1[:colon1]) == 12: #Unlikely midnight event, hour = 0
+            time = DT.time(0, int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
+        else: #All other AMs are just the hour
+            time = DT.time(int(time1[:colon1]), int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
     tempDict = {'date':date, 'time': time, 'badge':item[1]}
 
     if time <= amCutoffPost and time >= amCutoffPre:
