@@ -1,41 +1,35 @@
-<!DOCTYPE html>
-<html>
-      <head>
-              <meta charset="utf-8">
-              <meta name="description" content="$title - El Nino - UCSF Peds">
-              <link rel="stylesheet" href="../../css/elNino.css">
-
-	      <title>El Nino - Meeting Form Tester</title>
-      </head>
-
-      <body>
-
-<h2>Enter your Meeting Planner parameters here.</h2>
-    
+<p class="intro">Getting multiple residents in the same place, at the same time is a huge pain. El Nino makes it easy! Select a date range to search and the residents. El Nino searches the Amion schedule and returns a list of a candidate dates that meet your criteria.</p>
+          
 <div class="output" id="updated">
-    <h3>Remember, you should make sure El Nino is up to date first.<br>
-    El Nino was last updated on:</h3> 
-    <ul><li><strong>$updated</strong> (yyyy-mm-dd)</li></ul></div>
+    <h4>Remember, you should make sure El Nino is up to date first.</h4>
+    <p>El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd)<br>
+    Go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a> to get the latest schedule data.</p></div>
 
+<hr>
+<h4>Enter your Meeting Planner parameters here.</h4>
 <div class="input" id="meetingForm">
-<form method="post" action="schedTester.py">
-<p id="mainForm">
-    <div class="prompt">Search Start Date: </div><input type="date" name="startDate" min="2015-07-01" max="2050-06-30"> Optional - defaults to today.
-    <div class="prompt">Search Stop Date: </div><input type="date" name="endDate" min="2015-07-01" max="2050-06-30"> Optional - defaults to 60 days from today.<br>
+<form method="post" action="podSchedCGI.py">
+<div id="basicForm">
+    <p><span class="prompt">Search Start Date: <input type="date" name="startDate" min="2015-07-01" max="2050-06-30"></span><span class="default"> Optional - defaults to today.</span><br>
+        <span class="prompt">Search Stop Date: <input type="date" name="endDate" min="2015-07-01" max="2050-06-30"></span><br><span class="default"> Optional - defaults to 60 days from today.</span><br>
+    <b>NB</b>: Meeting Planner may take a minute or 2 to load because it has to load the entire Amion "Who's on call" page for every day in your search range. Longer date ranges take longer.<br></p>
 
-    Check this box to include weekends as candidate dates: <input type="checkbox" name="weekends" value="1"> Default ignores weekends.<br>
+    <p><span class="prompt">Check this box to include weekends as candidate dates: <input type="checkbox" name="weekends" value="1"></span><span class="default"> Default ignores weekends.</span></p>
 
-    How many candidate dates would you like El Nino to return? <input type="number" name="candidates" min="1" max="100"> Optional - defaults to 15 days. (Careful, El Nino may react strangely if you request more candidate dates than you allow days to search.)</p>
+    <p><span class="prompt">How many candidate dates would you like El Nino to return? <input type="number" name="candidates" min="1" max="100"></span><span class="default"> Optional - defaults to 15 days. (Careful, El Nino may react strangely if you request more candidate dates than you allow days to search.)</span></p></div>
 
-<p id="AmNamesForm">
-    $AmNamesForm</p>
+<div id="AmNamesForm">
+<p><span class="prompt">Select Residents:</span>
+<span class="resTable">$AmNamesForm</span></p></div>
+
+<!--
+Vacation dates input - obsolete with addition of vacation block lookup to podSched:
 <p id="optionalForm">
 Vacation Start 1: <input type="date" name="vacStart" min="2015-07-01" max="2050-06-30">
-<!--    <div class="currentSet">  Currently set to $block1split1</div><br>-->
 Vacation Stop 1: <input type="date" name="vacStop" min="2015-07-01" max="2050-06-30"><br>
 Vacation Start 2: <input type="date" name="vacStart" min="2015-07-01" max="2050-06-30">
 Vacation Stop 2: <input type="date" name="vacStop" min="2015-07-01" max="2050-06-30"></p>
-
+-->
 <input type="submit" value="Submit"></form>
     </div>
     </body>

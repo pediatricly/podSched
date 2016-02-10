@@ -1,25 +1,21 @@
-<h2>This El Nino program calculates allotments to resident meal cards based on their schedule.</h2>
-<h3>This program does NOT read the Amion schedule directly!</h3>
-<ul><li>It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse).</li>
-    <li>Obviously, if those data are not current, you will get inaccurate allotments and residents will be pissed.</li>
-    <li>So it's important to update El Nino before using this program.</li></ul>
+<h3 class="title">This El Nino program calculates allotments to resident meal cards based on their schedule.</h3>
+<p class="intro">This program tallies meal card allocations based on resident schedules. <br>
+It does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate allotments and residents will be pissed. So it is critical to update El Nino before using this program.<br>
+El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
+If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</p>
 
-<div class="output" id="updated">
-    <h3>El Nino was last updated on:</h3> 
-    <ul><li><strong>$updated</strong> (yyyy-mm-dd)</li>
-        <li>If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</li></ul>
-
-
+<hr>
+<h3>Enter Your Parameters Here</h3>
 <div class="input" id="lunchForm">
 <form enctype="multipart/form-data" method="post" action="lunchMoneyCGI.py">
-<div class="prompt">First Block to Calculate: </div><input type="number" name="firstBlock" min="1" max="13"><div class="currentSet">  Defaults to 1 if left blank.</div><br>
-<div class="prompt">Last Block to Calculate: </div><input type="number" name="lastBlock" min="1" max="13"><div class="currentSet">  Defaults to 13 if left blank.</div><br>
+<span class="prompt">First Block to Calculate: </span><input type="number" name="firstBlock" min="1" max="13"><span class="default">  Defaults to 1 if left blank.</span><br>
+<span class="prompt">Last Block to Calculate: </span><input type="number" name="lastBlock" min="1" max="13"><span class="default">  Defaults to 13 if left blank.</span><br><br>
 PGY Classes to Include:
-R1<input type="checkbox" name="classI" value="1">
+<span class="prompt">R1<input type="checkbox" name="classI" value="1">
 R2<input type="checkbox" name="classI" value="2">
-R3<input type="checkbox" name="classI" value="3">
-(Defaults to all 3 classes if none are checked.)<br><br>
-The current list of allotments by rotation was uploaded $rotCashUpdate (yyyy-mm-dd). You can upload a new version here or leave blank to use that last version: <input type="file" name="foodCashNew"><br><br>
+R3<input type="checkbox" name="classI" value="3"></span>
+<span class="default">(Defaults to all 3 classes if none are checked.)</span><br><br>
+<span class="prompt">The current list of allotments by rotation was uploaded $rotCashUpdate (yyyy-mm-dd). You can upload a new version here or leave blank to use that last version: <input type="file" name="foodCashNew"></span><br><br>
     <input type="submit" value="Submit"></form>
     </div>
 
@@ -34,5 +30,5 @@ The current list of allotments by rotation was uploaded $rotCashUpdate (yyyy-mm-
                 <ol><li>Rotation</li>
                     <li>cashWk</li></ol></li>
             <li>The rotation names in column A <b>need</b> to match those in Amion exactly. You can get <a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">the latest list in Amion from El Nino</a> (based on the last El Nino update).</li>
-            <li>The cash amounts in column B must be weekly.</li></ol></p>
+            <li>The cash amounts in column B must be weekly and must be <b>numbers only</b>.</li></ol></p>
     </div>

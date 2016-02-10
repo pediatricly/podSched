@@ -96,10 +96,11 @@ print 'Content-Type: text/html\r\n\r\n'
 
 try:
     namesIn = form.getlist('namesIn')
+    message += 'Used these input Amion names: '
     for AmName in namesIn:
         AmionNames.append(cgi.escape(AmName))
-        message += AmionName + ', '
-    message = message[:-2]
+        message += AmName + ', '
+    message = message[:-2] + '<br>'
 except: errMessage += 'Whoa! Something went wrong with the Amion Names input.'
 
 try:
@@ -132,11 +133,11 @@ try:
     weekendsIn = cgi.escape(weekendsIn)
     if weekendsIn == '1':
         weekendsOK = 1
-        message += 'Used the entered weekends parameter, %s<br>' % weekendsOK
+        message += 'Used the entered weekends parameter, %s (0=ignore weekends)<br>' % weekendsOK
     else: weekendsOK = 0
 except:
     weekendsOK = 0
-    message += 'Used the default weekends parameter, 0<br>'
+    message += 'Used the default weekends parameter, 0 (0=ignore weekends)<br>'
 
 try:
     candIn = form.getfirst('candidates', '')
@@ -354,12 +355,15 @@ for day in allDays:
 #################################################################################
 ### Rank by score, write to csv
 #################################################################################
-candidatesTable = ''
+candidatesTable = '<tr><th>Rank</th>'
 fh = open(csvOut, 'wb')
 csvwriter = csv.writer(fh, quotechar=' ')
 outHeaders = ['date', 'dayOfWeek', dayScoreN, postCallN]
 for res in AmionNames: outHeaders.append(res)
 csvwriter.writerow(outHeaders)
+for item in outHeaders:
+    candidatesTable += '<th>' + item + '</th>'
+candidatesTable += '</tr>'
 counter = 0
 for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
                   reverse=True):
@@ -381,6 +385,10 @@ for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
                 row.append(shiftStr)
             # print row
             csvwriter.writerow(row)
+            candidatesTable += '<tr><td>' + str(counter + 1) + '</td>'
+            for item in row:
+                candidatesTable += '<td>' + str(item) + '</td>'
+            candidatesTable += '</tr>'
         counter +=1
 fh.close()
 
@@ -399,6 +407,9 @@ main = ''
 with open(htmlTemplate, 'r') as temp:
     htmlTemp = temp.read()
     main = string.Template(htmlTemp).safe_substitute(templateVars)
+# Careful! Don't copy this to other scripts as this script imports the whole
+# string module so this syntax is different from those that from string import
+# Template.
 
 templateVars = dict(version=version, title=title, subtitle=subtitle, main=main
                 )

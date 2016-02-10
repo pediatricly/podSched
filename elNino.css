@@ -84,50 +84,6 @@ nav li a:hover {
     color: white;
 }
 
-/* The Details / Summary Boxes in the Header */
-
-header details {
-    font-size: 18px;
-    clear: both;
-/*    clear: left;*/
-    display: block;
-    padding-left: 3%;
-    padding-right: 3%;
-    border: 1px solid white;
-    padding-top: 0.25%;
-    padding-bottom: 0.25%;
-    margin-top: 0.25%;
-    margin-bottom: 0.25%;
-}
-
-header details p {
-    padding-left: 1.5em;
-    text-indent: -1.5em;
-    text-align: left;
-    font-size: 16px;
-/*    line-height: 20px;*/
-}
-
-header details ul, ol {
-/*    font-weight: bold;*/
-/*    text-decoration: underline;*/
-    font-size: 15px;
-    text-align: left;
-    line-height: 140%;
-}
-
-header details ul ul {
-/*    line-height: 20px;*/
-    font-weight: normal;
-    text-decoration: none;
-    font-size: 14px;
-}
-/*Put summary below details so it inherits details stuff but overrides it.*/
-header summary {
-    font-weight: bold;
-    font-size: 18px;
-}
-
 main {
     font-size: 18px;
 }
@@ -162,6 +118,19 @@ table {
     border: 1px solid rgb(254, 255, 255);
 }
 
+#mainOutputTable table {
+    border-spacing: 0px;
+    font-size: 10pt;
+    margin-left: 10%;
+    border: 1px solid rgb(254, 255, 255);
+    
+}
+
+#message {
+    margin-left: 10%;
+    font-size: 16px;
+}
+
 main ul {
     font-size: 16px;
 }
@@ -180,13 +149,106 @@ a:hover {
     background: #b18b8b;
 }
 
+.prompt {
+    
+}
+
+.default {
+    font-size: 12px;
+}
+
+
+input[type="checkbox"] {
+    height: 16px;
+    width: 16px;
+    margin: 0.6%;
+}
+
+input[type="submit"] {
+    cursor: pointer;
+    font-size: 20px;
+    padding: 1%;
+    border: solid 2px rgb(148, 218, 248);
+    background-color: white;
+    border-radius: 10px;
+    margin-left: 43%
+    
+}
+
+/*
+input[type="checkbox"]:label {
+    cursor: crosshair;
+}
+
+input[type="checkbox"]:checked + label {
+    height: 16px;
+    width: 16px;
+    background-color: red;
+}
+*/
+
+
+/*Individual Stuff*/
+
+#sampleFoodCash {
+    width: 50%;
+    max-width: 300px;
+}
+
+
+
+
+/*Footer Stuff*/
+
 footer {
     margin-top: 5%;
     padding: 2%;
     text-align: center;
     clear: left;
 }
+/* The Details / Summary Boxes in the Footer */
 
+footer details {
+    font-size: 18px;
+    clear: both;
+/*    clear: left;*/
+    display: block;
+    padding-left: 3%;
+    padding-right: 3%;
+    border: 1px solid white;
+    padding-top: 0.25%;
+    padding-bottom: 0.25%;
+    margin-top: 0.25%;
+    margin-bottom: 0.25%;
+}
+
+footer details p {
+    padding-left: 1.5em;
+    text-indent: -1.5em;
+    text-align: left;
+    font-size: 16px;
+/*    line-height: 20px;*/
+}
+
+footer details ul, ol {
+/*    font-weight: bold;*/
+/*    text-decoration: underline;*/
+    font-size: 15px;
+    text-align: left;
+    line-height: 140%;
+}
+
+footer details ul ul {
+/*    line-height: 20px;*/
+    font-weight: normal;
+    text-decoration: none;
+    font-size: 14px;
+}
+/*Put summary below details so it inherits details stuff but overrides it.*/
+footer summary {
+    font-weight: bold;
+    font-size: 18px;
+}
 /* Small screen take over */
 @media only screen 
     and (max-device-width : 736px) 

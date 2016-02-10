@@ -27,7 +27,7 @@ checkboxes = {1: [], 2: [], 3: []}
 htmlStr = '<input type="checkbox" name="namesIn" value="%s">'
 for res in sorted(allRes):
     if '-' in res:
-        boxStr = '%s <input type="checkbox" name="namesIn" value="%s"> |   ' % (res, res)
+        boxStr = '<label>%s <input type="checkbox" name="namesIn" value="%s"> </label>|   ' % (res, res)
         checkboxes[allRes[res]['pgy']].append(boxStr)
 
 AmNamesForm = ''

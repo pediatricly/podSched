@@ -1,0 +1,113 @@
+
+
+<!DOCTYPE html>
+<html>
+      <head>
+              <meta charset="utf-8">
+              <meta name="description" content="Meeting Planner - El Nino - UCSF Peds">
+              <link rel="stylesheet" href="elNino.css">
+
+	      <title>El Nino - Meeting Planner</title>
+      </head>
+
+      <body>
+		<header>
+		<figure><img src = "http://www.pediatricly.com/images/elNino/elNinoLogo.jpg" width = "40%" alt = "I am the mighty El Nino" id="mainIcon"/></figure>
+            <h1>I am the mighty El Nino!<br>
+            Meeting Planner</h1>
+            <h2>Input Form</h2>
+            
+            <div id="subtitle"><h4>For those of you who no habla espanol, El Nino is Spanish for...The Nino.</h4></div>
+    
+            <nav><ul><li><a href="http://pediatricly.com/cgi-bin/elNino/elNinoMain.py">Main</a></li>
+            <li><a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">Meeting Planner</a></li>
+        </ul></nav>
+            
+            
+</header>
+
+
+
+<main>
+<!DOCTYPE html>
+<html>
+      <head>
+              <meta charset="utf-8">
+              <meta name="description" content="$title - El Nino - UCSF Peds">
+              <link rel="stylesheet" href="../../css/elNino.css">
+
+	      <title>El Nino - Meeting Form Tester</title>
+      </head>
+
+      <body>
+<h3 class="title">The Meeting Form</h3>
+<p class="intro">Getting multiple residents in the same place, at the same time is a huge pain. El Nino makes it easy! Select a date range to search and the residents. El Nino searches the Amion schedule and returns a list of a candidate dates that meet your criteria.</p>
+          
+<div class="output" id="updated">
+    <h4>Remember, you should make sure El Nino is up to date first.</h4>
+    <p>El Nino was last updated on <strong>2016-02-09</strong> (yyyy-mm-dd)</p>
+    <p>Go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a> to get the latest schedule data.</p></div>
+
+<hr>
+<h4>Enter your Meeting Planner parameters here.</h4>
+<div class="input" id="meetingForm">
+<form method="post" action="podSchedCGI.py">
+<div id="basicForm">
+    <p><span class="prompt">Search Start Date: <input type="date" name="startDate" min="2015-07-01" max="2050-06-30"></span><span class="default"> Optional - defaults to today.</span><br>
+        <span class="prompt">Search Stop Date: <input type="date" name="endDate" min="2015-07-01" max="2050-06-30"></span><span class="default"> Optional - defaults to 60 days from today.</span><br>
+    <strong>NB</strong>: Meeting Planner may take a minute or 2 to load because it has to load the entire Amion "Who's on call" page for every day in your search range. Longer date ranges take longer.<br></p>
+
+    <p><span class="prompt">Check this box to include weekends as candidate dates: <input type="checkbox" name="weekends" value="1"></span><span class="default"> Default ignores weekends.</span></p>
+
+    <p><span class="prompt">How many candidate dates would you like El Nino to return? <input type="number" name="candidates" min="1" max="100"></span><span class="default"> Optional - defaults to 15 days. (Careful, El Nino may react strangely if you request more candidate dates than you allow days to search.)</span></p></div>
+
+<div id="AmNamesForm">
+<p><span class="prompt">Select Residents:</span>
+<span class="resTable"><br><br>R1s: <br><label>Argueza-B <input type="checkbox" name="namesIn" value="Argueza-B"> </label>|   <label>Burnett-H <input type="checkbox" name="namesIn" value="Burnett-H"> </label>|   <label>Caffarelli-M <input type="checkbox" name="namesIn" value="Caffarelli-M"> </label>|   <label>Chen-D <input type="checkbox" name="namesIn" value="Chen-D"> </label>|   <label>CribbFabersunne-C <input type="checkbox" name="namesIn" value="CribbFabersunne-C"> </label>|   <br><label>Frank-E <input type="checkbox" name="namesIn" value="Frank-E"> </label>|   <label>Gal-D <input type="checkbox" name="namesIn" value="Gal-D"> </label>|   <label>Guslits-E <input type="checkbox" name="namesIn" value="Guslits-E"> </label>|   <label>Hao-R <input type="checkbox" name="namesIn" value="Hao-R"> </label>|   <br><label>Iacopetti-C <input type="checkbox" name="namesIn" value="Iacopetti-C"> </label>|   <label>Liou-A <input type="checkbox" name="namesIn" value="Liou-A"> </label>|   <label>Maddox-J <input type="checkbox" name="namesIn" value="Maddox-J"> </label>|   <label>McBride-D <input type="checkbox" name="namesIn" value="McBride-D"> </label>|   <br><label>Nash-D <input type="checkbox" name="namesIn" value="Nash-D"> </label>|   <label>Nguyen-J <input type="checkbox" name="namesIn" value="Nguyen-J"> </label>|   <label>Peitzman-E <input type="checkbox" name="namesIn" value="Peitzman-E"> </label>|   <label>Robinson-M <input type="checkbox" name="namesIn" value="Robinson-M"> </label>|   <br><label>SchafferDeRoo-S <input type="checkbox" name="namesIn" value="SchafferDeRoo-S"> </label>|   <label>Schwartz-R <input type="checkbox" name="namesIn" value="Schwartz-R"> </label>|   <label>Shalen-J <input type="checkbox" name="namesIn" value="Shalen-J"> </label>|   <label>Simmons-R <input type="checkbox" name="namesIn" value="Simmons-R"> </label>|   <br><label>Singal-P <input type="checkbox" name="namesIn" value="Singal-P"> </label>|   <label>Spiegel-E <input type="checkbox" name="namesIn" value="Spiegel-E"> </label>|   <label>Spitznagle-J <input type="checkbox" name="namesIn" value="Spitznagle-J"> </label>|   <label>Steinberg-E <input type="checkbox" name="namesIn" value="Steinberg-E"> </label>|   <br><label>Tsen-D <input type="checkbox" name="namesIn" value="Tsen-D"> </label>|   <label>Wohlford-E <input type="checkbox" name="namesIn" value="Wohlford-E"> </label>|   <label>Yang-E <input type="checkbox" name="namesIn" value="Yang-E"> </label>|   <br><br>R2s: <br><label>Adamson-G <input type="checkbox" name="namesIn" value="Adamson-G"> </label>|   <label>Andler-C <input type="checkbox" name="namesIn" value="Andler-C"> </label>|   <label>Braun-L <input type="checkbox" name="namesIn" value="Braun-L"> </label>|   <label>Cooch-P <input type="checkbox" name="namesIn" value="Cooch-P"> </label>|   <label>Crouch-E <input type="checkbox" name="namesIn" value="Crouch-E"> </label>|   <br><label>Davenport-J <input type="checkbox" name="namesIn" value="Davenport-J"> </label>|   <label>Davis-M <input type="checkbox" name="namesIn" value="Davis-M"> </label>|   <label>Emmott-M <input type="checkbox" name="namesIn" value="Emmott-M"> </label>|   <label>Hammoudi-T <input type="checkbox" name="namesIn" value="Hammoudi-T"> </label>|   <br><label>Haro-S <input type="checkbox" name="namesIn" value="Haro-S"> </label>|   <label>Hart-Cooper-G <input type="checkbox" name="namesIn" value="Hart-Cooper-G"> </label>|   <label>Johnson-Kerner-B <input type="checkbox" name="namesIn" value="Johnson-Kerner-B"> </label>|   <label>Keller-S <input type="checkbox" name="namesIn" value="Keller-S"> </label>|   <br><label>Knappe-A <input type="checkbox" name="namesIn" value="Knappe-A"> </label>|   <label>Kodali-S <input type="checkbox" name="namesIn" value="Kodali-S"> </label>|   <label>Koo-J <input type="checkbox" name="namesIn" value="Koo-J"> </label>|   <label>Kramer-K <input type="checkbox" name="namesIn" value="Kramer-K"> </label>|   <br><label>Laguna-M <input type="checkbox" name="namesIn" value="Laguna-M"> </label>|   <label>Links-B <input type="checkbox" name="namesIn" value="Links-B"> </label>|   <label>Madduri-G <input type="checkbox" name="namesIn" value="Madduri-G"> </label>|   <label>Oo-H <input type="checkbox" name="namesIn" value="Oo-H"> </label>|   <br><label>Sane-M <input type="checkbox" name="namesIn" value="Sane-M"> </label>|   <label>Sundby-T <input type="checkbox" name="namesIn" value="Sundby-T"> </label>|   <label>Truong-B <input type="checkbox" name="namesIn" value="Truong-B"> </label>|   <label>Vaisberg-K <input type="checkbox" name="namesIn" value="Vaisberg-K"> </label>|   <br><label>Vinh-L <input type="checkbox" name="namesIn" value="Vinh-L"> </label>|   <label>Wietstock-S <input type="checkbox" name="namesIn" value="Wietstock-S"> </label>|   <label>Wu-L <input type="checkbox" name="namesIn" value="Wu-L"> </label>|   <br><br>R3s: <br><label>Ainsworth-A <input type="checkbox" name="namesIn" value="Ainsworth-A"> </label>|   <label>Arora-K <input type="checkbox" name="namesIn" value="Arora-K"> </label>|   <label>Balkin-E <input type="checkbox" name="namesIn" value="Balkin-E"> </label>|   <label>Bares-A <input type="checkbox" name="namesIn" value="Bares-A"> </label>|   <label>Beckert-R <input type="checkbox" name="namesIn" value="Beckert-R"> </label>|   <br><label>Bent-M <input type="checkbox" name="namesIn" value="Bent-M"> </label>|   <label>Brajkovic-I <input type="checkbox" name="namesIn" value="Brajkovic-I"> </label>|   <label>Brim-R <input type="checkbox" name="namesIn" value="Brim-R"> </label>|   <label>Chong-A <input type="checkbox" name="namesIn" value="Chong-A"> </label>|   <br><label>Doshi-N <input type="checkbox" name="namesIn" value="Doshi-N"> </label>|   <label>Goudy-B <input type="checkbox" name="namesIn" value="Goudy-B"> </label>|   <label>Harper-L <input type="checkbox" name="namesIn" value="Harper-L"> </label>|   <label>Hayward-L <input type="checkbox" name="namesIn" value="Hayward-L"> </label>|   <br><label>Huibregtse-K <input type="checkbox" name="namesIn" value="Huibregtse-K"> </label>|   <label>Ip-W <input type="checkbox" name="namesIn" value="Ip-W"> </label>|   <label>Jablon-K <input type="checkbox" name="namesIn" value="Jablon-K"> </label>|   <label>LaRocca-T <input type="checkbox" name="namesIn" value="LaRocca-T"> </label>|   <br><label>Maurer-L <input type="checkbox" name="namesIn" value="Maurer-L"> </label>|   <label>Neely-J <input type="checkbox" name="namesIn" value="Neely-J"> </label>|   <label>Niedfeld-M <input type="checkbox" name="namesIn" value="Niedfeld-M"> </label>|   <label>Ort-K <input type="checkbox" name="namesIn" value="Ort-K"> </label>|   <br><label>Pantell-M <input type="checkbox" name="namesIn" value="Pantell-M"> </label>|   <label>Scahill-M <input type="checkbox" name="namesIn" value="Scahill-M"> </label>|   <label>Suarez-D <input type="checkbox" name="namesIn" value="Suarez-D"> </label>|   <label>Sun-V <input type="checkbox" name="namesIn" value="Sun-V"> </label>|   <br><label>Thein-K <input type="checkbox" name="namesIn" value="Thein-K"> </label>|   <label>Thompson-D <input type="checkbox" name="namesIn" value="Thompson-D"> </label>|   <label>Wasio-L <input type="checkbox" name="namesIn" value="Wasio-L"> </label>|   <label>West-E <input type="checkbox" name="namesIn" value="West-E"> </label>|   <br><label>Woo-K <input type="checkbox" name="namesIn" value="Woo-K"> </label>|   <label>Wu-P <input type="checkbox" name="namesIn" value="Wu-P"> </label>|   </span></p></div>
+
+<!--
+Vacation dates input - obsolete with addition of vacation block lookup to podSched:
+<p id="optionalForm">
+Vacation Start 1: <input type="date" name="vacStart" min="2015-07-01" max="2050-06-30">
+Vacation Stop 1: <input type="date" name="vacStop" min="2015-07-01" max="2050-06-30"><br>
+Vacation Start 2: <input type="date" name="vacStart" min="2015-07-01" max="2050-06-30">
+Vacation Stop 2: <input type="date" name="vacStop" min="2015-07-01" max="2050-06-30"></p>
+-->
+<input type="submit" value="Submit"></form>
+    </div>
+    </body>
+</html>
+</main>
+             
+
+
+<footer><p>This the mighty El Nino - Meeting Planner.<br>
+              This page was generated by a program called meetingForm.py.<br>
+              Developed by Mike in February 2015. <a href="http://lnkd.in/sCnSZw">Ping him</a> for feedback &amp; suggestions.</p>
+ 
+<details><summary>How does El Nino work?</summary>
+            <p>El Nino reads the messy schedule data on the Amion website and turns it into something only a robot could love - beautifully elaborate, machine-readable data on the entire residency program's schedule. This has some great uses:
+                <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
+                        <ul><li>Tally up how much cash to put on meal cards based on their rotation week-by-week.</li>
+                        </ul></li>
+                    <li>confAttend - not available online yet
+                        <ul><li>Get the "denominator" for conference attendence. Count up how many conferences residents should have attended based on their block schedules.</li>
+                        </ul></li>
+                    <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">Meeting Planner</a>
+                        <ul><li>Getting multiple residents on different schedules in the same place at the same time is a pain!</li>
+                            <li>Meeting Planner goes through an arbitrary subset of residents' schedules and outputs a ranked, scored list of dates when they are on the most aligned and convenient rotations.</li>
+                            <li>For example, if you want to schedule an evening meeting, you can score for shifts that end around 5pm to pick an evening when everyone is available. (Hence the original name "podSched" - this was developed to schedule PLUS pod dinners.)</li>                           </ul></li></ul></p>
+            <p>BUT, to do any of this, you need to make sure El Nino is working with an updated schedule. We all know the Amion schedule changes frequently. And that's why it all starts with <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a>.</p></details>
+
+    <p>Looking beyond El Nino?<br>
+                  <a href="https://wiki.library.ucsf.edu/display/PedsHouse/UCSF+Pediatrics+Wiki">Peds House Wiki</a><br>
+                  <a href="http://pediatrics.ucsf.edu/medical-education/residency">Peds Residency Homepage</a><br>
+                  <a href="http://pediatrics.ucsf.edu/medical-education/residency/program-design/programs-tracks-and-pathways/plus-program">PLUS Program</a><br>
+                  </p>
+              </footer>
+              </body>
+              </html>
+
+
