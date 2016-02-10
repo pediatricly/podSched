@@ -155,6 +155,13 @@ ol, ul {
 /*    padding-top: 0%;*/
 }
 
+table {
+    border-spacing: 0px;
+    font-size: 10pt;
+    margin-left: 25%;
+    border: 1px solid rgb(254, 255, 255);
+}
+
 main ul {
     font-size: 16px;
 }

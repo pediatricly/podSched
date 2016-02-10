@@ -1,5 +1,10 @@
 #! /usr/bin/python
 
+# CAREFUL - this no longer up to date with the CGI version.
+# Most notably, CGI was updated 9Feb16 to handle the first Monday problem
+# better. This version here looks up empty weeks and misses partial weeks in
+# Block 1. CGI version fixes this.
+
 '''
 import allRes
 
@@ -57,7 +62,8 @@ rotCashcsv = 'foodCashByWeek.csv' # csv file for the $ by rotation
 # 'ADOL','24' (rows by rotation, second column needs to be a number. It's read
 # as a string but will be converted to float below)
 csvOutFile = 'lunchMoneyOut.csv'
-
+errRots = set()
+errRes = set()
 ##########################################################
 # Setup the basic intake data
 increment = DT.timedelta(7) # Counts up money going by weeks
@@ -109,8 +115,9 @@ for pgyYr in classes:
             # tracker = tracker + DT.timedelta(7)
             while (tracker < endDay):
                 tupule = blockLookup(tracker, res, allRes)
-# rotTest = blockLookup('2016-01-20', 'Sun-V', allRes)
-# print rotTest # returns 'ORANGE3'
+                # tupule is (blockNum, 'rotation') eg:
+                # blockLookup('2016-01-20', 'Sun-V', allRes)
+                # returns (8, 'ORANGE3')
                 block = tupule[0]
                 rotation = tupule[1]
                 # These try blocks allow skipping empty cells, eg, partial year
@@ -118,7 +125,12 @@ for pgyYr in classes:
                 try: cashRot = cashData[rotation]
                 except:
                     cashRot = 0
-                    print res, tupule
+                    # print res, tupule
+                    errRes.add(res) # Log error res. Should be super-seniors.
+                    # If not, it's a big error somewhere.
+                    errRots.add(rotation) # Log the error rotations. Most are
+                    # blank garbage from super-seniors, but some will be new
+                    # rotation names not in the input csv
                 try: data[res][block] += cashRot
                 except: pass
                 tracker = tracker + increment
@@ -136,5 +148,19 @@ with open(csvOutFile, 'wb') as csvOut:
             row.append(data[res][block])
         writer.writerow(row)
 # print data
-
 # print allRes['co']
+
+### Error output (prepped for HTML formating) ##########
+# This should be a collection of blank Amion blocks for super seniors
+# BUT non-blank rotations are new rotations that need to be added to the rotCash
+# input csv
+# Blank blocks for non-super-seniors could be a new bug in the blockParse code
+# and/or a change in the Amion HTML
+errRotStr = ''
+errResStr = ''
+for rot in errRots:
+    if rot != '':
+        errRotStr += '<td>' + rot + '</td>'
+for res in errRes:
+    if res != '':
+        errResStr += '<td>' + res + '</td>'

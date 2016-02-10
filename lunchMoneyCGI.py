@@ -67,6 +67,8 @@ title = 'Lunch Money'
 subtitle = 'Results Form'
 frameTemplate = 'elNinoFrame.html'
 htmlTemplate = 'lunchMoneyTemplate.html'
+errRots = set()
+errRes = set()
 ###############################################################################
 ### CGI Setup
 ################################################################################
@@ -164,17 +166,35 @@ for pgyYr in classes:
         stops = blockStops23
 
     day1 = DT.datetime.strptime(starts[firstBlock], '%Y-%m-%d')
-    firstMon = day1 + DT.timedelta(days=(7-day1.weekday())) - increment
+    firstMon = day1 + DT.timedelta(days=(7-day1.weekday()))# - increment
     endDay = DT.datetime.strptime(stops[lastBlock], '%Y-%m-%d')
+    # print day1
+    # print firstMon
 
     for res in allRes:
         if allRes[res]['pgy'] == pgyYr:
-            tracker = firstMon
+            if day1.weekday() != 0: #If day1 is not Monday, grab that first partial week as it if were whole, then proceed
+                tupule = blockLookup(day1, res, allRes)
+                block = tupule[0]
+                rotation = tupule[1]
+                try: cashRot = cashData[rotation]
+                except:
+                    cashRot = 0
+                    # print tracker
+                    # print res, tupule, '<br>'
+                    errRes.add(res) # Log error res. Should be super-seniors.
+                    errRots.add(rotation) # Log the error rotations. Most are
+                try: data[res][block] += cashRot
+                except: pass
+                tracker = firstMon
+            else: #If day1 is Monday, just roll
+                tracker = day1
             # tracker = tracker + DT.timedelta(7)
             while (tracker < endDay):
                 tupule = blockLookup(tracker, res, allRes)
-# rotTest = blockLookup('2016-01-20', 'Sun-V', allRes)
-# print rotTest # returns 'ORANGE3'
+                # tupule is (blockNum, 'rotation') eg:
+                # blockLookup('2016-01-20', 'Sun-V', allRes)
+                # returns (8, 'ORANGE3')
                 block = tupule[0]
                 rotation = tupule[1]
                 # These try blocks allow skipping empty cells, eg, partial year
@@ -182,10 +202,13 @@ for pgyYr in classes:
                 try: cashRot = cashData[rotation]
                 except:
                     cashRot = 0
-                    # print res, tupule
-                    errHandler.write(res)
-                    errHandler.write(str(tupule) + '\n')
-                    # errHandler.write(res + str(tupule) + '\n')
+                    # print tracker
+                    # print res, tupule, '<br>'
+                    errRes.add(res) # Log error res. Should be super-seniors.
+                    # If not, it's a big error somewhere.
+                    errRots.add(rotation) # Log the error rotations. Most are
+                    # blank garbage from super-seniors, but some will be new
+                    # rotation names not in the input csv
                 try: data[res][block] += cashRot
                 except: pass
                 tracker = tracker + increment
@@ -208,8 +231,20 @@ with open(csvOutFile, 'wb') as csvOut:
         # print row
         # print '<br>'
 # print data
-
 # print allRes['co'
+errRotStr = ''
+errResStr = ''
+for rot in errRots:
+    if rot != '' and rot != '-' and rot != '--':
+        errRotStr += '<tr><td>' + rot + '</td></tr>'
+for res in errRes:
+    if res != '' and res != 'co' and res != 'u':
+        errResStr += '<tr><td>' + res + '</td></tr>'
+if errResStr == '': errResStr += '<tr><td>None - hooray!</td></tr>'
+if errRotStr == '': errRotStr += '<tr><td>None - hooray!</td></tr>'
+
+
+
 try:
     ################################################################################
     ### Output to html (or print to stdout)
@@ -217,7 +252,8 @@ try:
     templateVars = dict(message=message, csvOutFile=csvOutFile,
                         errFile=errFile, rotCashcsv=rotCashcsv, updated=updated,
                         rotCashUpdate=rotCashUpdate, classesStr=classesStr,
-                        firstBlock=str(firstBlock), lastBlock=str(lastBlock))
+                        firstBlock=str(firstBlock), lastBlock=str(lastBlock),
+                        errRotStr=errRotStr, errResStr=errResStr)
     main = ''
     with open(htmlTemplate, 'r') as temp:
         htmlTemp = temp.read()
