@@ -1,11 +1,4 @@
-date,dayOfWeek,dayScore,postCall,Sun-V,Brim-R,Ainsworth-A,Pantell-M
-2016-02-25,Thu,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-23,Tue,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-26,Fri,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-24,Wed,0,0, SFO-SCR/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-29,Mon,-1,0, Not  Found/SFO3   , Not  Found/E-Rnl   , Not  Found/E-Pulm   , SFN  Sr  Day/SFN3   
-2016-02-19,Fri,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-17,Wed,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-18,Thu,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-16,Tue,-1,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
-2016-02-22,Mon,-1,0, Not  Found/SFO3   , Not  Found/E-Res   , Not  Found/JEOP   , SFN  Sr  Day/SFN3   
+date,dayOfWeek,dayScore,postCall,Sun-V,Brim-R,Ainsworth-A,Huibregtse-K
+2016-02-15,Mon,0,0, Not  Found/PLUS   , Not  Found/PLUS   , Not  Found/JEOP   , Not  Found/PICU3   
+2016-02-11,Thu,-2,0, Not  Found/ORANGE3   , Not  Found/JEOP   , Not  Found/PURPLE3   , Not  Found/VAC   
+2016-02-12,Fri,-4,0, UCW3-Nite/ORANGE3   , Not  Found/JEOP   , Not  Found/PURPLE3   , Not  Found/VAC   
