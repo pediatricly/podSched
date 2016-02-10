@@ -68,30 +68,6 @@ except:
     candidates = 15
     message += 'Used the default candidates %s<br>' % candidates
 
-vacTupules = []
-try:
-    vacStartsIn = form.getlist('vacStart')
-    vacStopsIn = form.getlist('vacStop')
-    assert (len(vacStartsIn) == len(vacStopsIn))
-    for i, start in enumerate(vacStartsIn):
-        assert (start < vacStopsIn[i])
-        startI = cgi.escape(start)
-        startI = startI[:10]
-        startI = DT.datetime.strptime(startI, '%Y-%m-%d')
-        startD = startI.date()
-
-        stopI = cgi.escape(vacStopsIn[i])
-        stopI = stopI[:10]
-        stopI = DT.datetime.strptime(stopI, '%Y-%m-%d')
-        stopD = stopI.date()
-        vacTupule = (startD, stopD)
-        vacTupules.append(vacTupule)
-except:
-    errMessage += 'Whoa! Something went wrong with vacation date entry, e.g., not all were entered as start/stop pairs or start date after stop date.<br>'
-
-print vacTupules
-print '<br>'
-vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
 csvIn = 'rotationsQual.csv'
 
 print message

@@ -1,0 +1,31 @@
+
+<h2>El Nino has just picked the candidate dates you requested.</h2>
+
+<div class="output" id="errorLog">
+<h3>But first, check for errors!</h3>
+    <p>Messages here are mostly for problems parsing any parameters entered on the <a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">previous page</a>.
+        <ul><li>$errMessage</li></ul>
+    Errors may give seemingly complete but inaccurate output, so please sanity any results if you get errors that persist despite double-checking your input.</p>
+</div>
+<hr>    
+<div class="output" id="outputLinks">
+<p>El Nino should have updated these main output files: 
+    <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/candidatesPrinter.py" target="_blank">$csvOut</a>
+        <ul><li>Contains the main data, your top ranked $candidates dates, in csv format.</li>
+            <li>After it loads in your browser, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li>
+            <li>The same data are in the table below on this page.</li></ul></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/rotationsQualPrinter.py" target="_blank">$csvIn</a>
+        <ul><li>View the current csv of scores by shift that El Nino used.</li>
+            <li>Mike designed the default list "rotationsQual.csv" to schedule evening meetings. 9-5 outpatient shifts get good scores, inpatient day shifts get medium scores, night shifts get impossible scores.</li>
+            <li>You can totally customize this to schedule other things (e.g., simulation days). Contact Mike for help with that.</li></ul></li></ul></p>    
+</div>
+
+
+<div class="output" id="summaryStats">
+<p>Summary data:
+    <ul><li>$message</li></ul>
+To re-do any of those parameters, return to the <a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">Meeting Form</a>.</p></div>
+
+<div class="output" id="mainOutputTable">
+<table>$candidatesTable</table>
+</div>

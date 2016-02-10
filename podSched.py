@@ -27,6 +27,8 @@ Basic Flow:
 stored dict of the year's entire Amion schedule (cf blockParse.py). Using this,
 I updated AmionLookup to grab the block from that dict as well & output it to
 candidates.csv
+10feb16: Updated to score for vacation days using blockParse / allRes data
+instead of having to input those dates manually.
 '''
 
 #===============================================================================

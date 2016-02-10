@@ -1,15 +1,21 @@
 #! /usr/bin/python26
 
 '''
-Build plan:
+Marks:
+    a - globals
+    b - scraper module
+    c - csv read in
+    d - loop through Amion scrape-crawl
+    e - score
+    f - rank and output
+
+Basic Flow:
     - list of names to AmionLookup
     - score looker-upper
-
-    Ready for this step:
-    - date iteration - write a loop that goes through the Amion process &
-    appends output to allDays list. Updates the request url at end of loop to
+    - date iteration - loop through the Amion process & appends output to
+    allDays list. Updates the request url at end of loop to
     feedback at the top.
-    Maybe a while loop that runs while date < endDate
+    while loop that runs while date < endDate
     Will actually need to have 2 separate request commands. First gets today's
     sched (which can probably throw away) & finds the url for tomorrow.
     That tomorrow url is what gets fed into the start of the loop.
@@ -21,6 +27,8 @@ Build plan:
 stored dict of the year's entire Amion schedule (cf blockParse.py). Using this,
 I updated AmionLookup to grab the block from that dict as well & output it to
 candidates.csv
+10feb16: Updated to score for vacation days using blockParse / allRes data
+instead of having to input those dates manually.
 '''
 
 #===============================================================================
@@ -32,82 +40,13 @@ import urllib
 import string
 import datetime as DT
 from allResStr import allRes as allRes # Local stored dict of whole block sched
+from allResStr import updated
 ###################################################################
 ### Define Globals Before Main try block
 ###################################################################
 try: version = os.path.basename(__file__)
 except: version = 'podSchedCGI.py'
 
-message = ''
-errMessage = ''
-########### CGI Inputs ############################
-# Defaults
-# AmionNames = ['Sun-V', 'Brim-R', 'Ainsworth-A', 'Pantell-M']
-# endDate = DT.date(2016,2,29)
-AmionNames = []
-
-try:
-    import cgi; import cgitb
-    print 'Content-Type: text/html\r\n\r\n'
-    cgitb.enable()
-    form = cgi.FieldStorage()
-except:
-    errMessage += 'Whoa! Something went wrong with the CGI initialization.'
-
-try:
-    namesIn = form.getlist('namesIn')
-    for AmName in namesIn:
-        AmionNames.append(cgi.escape(AmName))
-except: errMessage += 'Whoa! Something went wrong with the Amion Names input.'
-
-try:
-    startDateIn = form.getfirst('startDate', '')
-    startDateIn = cgi.escape(startDateIn)
-    # HTML form brings the whole ISO date format. This strips to just the date.
-    startDateIn = startDateIn[:10]
-    startDateIn = DT.datetime.strptime(startDateIn, '%Y-%m-%d')
-    startDate = startDateIn.date()
-    message += 'Used the entered startDate\n'
-except:
-    startDate = DT.date.today() # Default to search from today
-    message += 'Used the default startDate\n'
-
-try:
-    endDateIn = form.getfirst('endDate', '')
-    endDateIn = cgi.escape(endDateIn)
-    # HTML form brings the whole ISO date format. This strips to just the date.
-    endDateIn = endDateIn[:10]
-    endDateIn = DT.datetime.strptime(endDateIn, '%Y-%m-%d')
-    endDate = endDateIn.date()
-    message += 'Used the entered endDate\n'
-except:
-    endDateIn = DT.datetime.now() + DT.timedelta(days=60) # Default to search for 2 mo
-    endDate = endDateIn.date()
-    message += 'Used the default endDate\n'
-
-try:
-    weekendsIn = form.getfirst('weekends', '')
-    if weekendsIn: weekendsOK = 1
-    else: weekendsOK = 0
-    message += 'Used the entered weekends parameter, %s\n' % weekendsOK
-except:
-    weekendsOK = 0
-    message += 'Used the default weekends parameter, 0\n' % weekendsOK
-
-try:
-    candIn = form.getfirst('candidates', '')
-    candidates = int(cgi.escape(candIn))
-    message += 'Used the entered candidates %s\n' % candidates
-except:
-    candidates = 15
-    message += 'Used the default candidates %s\n' % candidates
-vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
-csvIn = 'rotationsQual.csv'
-
-#################################################################################
-### Preset parameters designed for evening meetings.
-### May eventually let these be set by CGI
-#################################################################################
 fieldnames = ['AmionRot', 'cleanRotName', 'Milestone Map Label']
 residentD = {}
 rotationsDict = {}
@@ -127,13 +66,93 @@ dataN = 'data'
 score = 'score'
 nightN = 'night'
 postCallN = 'postCall'
+vacation = 'VAC'
 
+csvIn = 'rotationsQual.csv'
 csvOut = 'candidates.csv'
+baseUrl = "http://amion.com/cgi-bin/ocs"
+AmionLogin = {"login" : "ucsfpeds"}
+nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
+testInput = 'http://pediatricly.com/cgi-bin/elNino/podSchedCGI.py?'
+### HTML Setup Here ############################
+title = 'Meeting Planner'
+subtitle = 'Results Form'
+frameTemplate = 'elNinoFrame.html'
+htmlTemplate = 'podSchedTemplate.html'
+#################################################################################
+### CGI Inputs and Setup All Go Here ############################
+#################################################################################
+message = ''
+errMessage = ''
+AmionNames = []
+
+try:
+    import cgi; import cgitb
+    cgitb.enable()
+    form = cgi.FieldStorage()
+except:
+    errMessage += 'Whoa! Something went wrong with the CGI initialization.'
+print 'Content-Type: text/html\r\n\r\n'
+
+try:
+    namesIn = form.getlist('namesIn')
+    for AmName in namesIn:
+        AmionNames.append(cgi.escape(AmName))
+        message += AmionName + ', '
+    message = message[:-2]
+except: errMessage += 'Whoa! Something went wrong with the Amion Names input.'
+
+try:
+    startDateIn = form.getfirst('startDate', '')
+    startDateIn = cgi.escape(startDateIn)
+    # HTML form brings the whole ISO date format. This strips to just the date.
+    startDateIn = startDateIn[:10]
+    startDateIn = DT.datetime.strptime(startDateIn, '%Y-%m-%d')
+    startDate = startDateIn.date()
+    message += 'Used the entered startDate, %s<br>' % startDate
+except:
+    startDate = DT.date.today() # Default to search from today
+    message += 'Used the default startDate, %s<br>' % startDate
+
+try:
+    endDateIn = form.getfirst('endDate', '')
+    endDateIn = cgi.escape(endDateIn)
+    # HTML form brings the whole ISO date format. This strips to just the date.
+    endDateIn = endDateIn[:10]
+    endDateIn = DT.datetime.strptime(endDateIn, '%Y-%m-%d')
+    endDate = endDateIn.date()
+    message += 'Used the entered endDate, %s<br>' % endDate
+except:
+    endDateIn = DT.datetime.now() + DT.timedelta(days=60) # Default to search for 2 mo
+    endDate = endDateIn.date()
+    message += 'Used the default endDate, %s<br>' % endDate
+
+try:
+    weekendsIn = form.getfirst('weekends')
+    weekendsIn = cgi.escape(weekendsIn)
+    if weekendsIn == '1':
+        weekendsOK = 1
+        message += 'Used the entered weekends parameter, %s<br>' % weekendsOK
+    else: weekendsOK = 0
+except:
+    weekendsOK = 0
+    message += 'Used the default weekends parameter, 0<br>'
+
+try:
+    candIn = form.getfirst('candidates', '')
+    candidates = int(cgi.escape(candIn))
+    message += 'Used the entered candidates, %s<br>' % candidates
+except:
+    candidates = 15
+    message += 'Used the default candidates, %s<br>' % candidates
+###### END CGI Setup ##################################################
+# print message
+# print errMessage
 
 ###### Basic Date Calculations ##################################################
 today = DT.date.today()
-fallYear = 2013
-springYear = 2014
+fallYear = 2013 # Just initializes the variable, reset to the current year below
+springYear = 2014 # Just initializes the variable, reset to the current year below
 if today.month > 6:
     fallYear = int(today.year)
     springYear = fallYear + 1
@@ -239,13 +258,10 @@ fh.close()
 #################################################################################
 ### Setup Amion loop by going to landing page & finding first Next Day link
 #################################################################################
-baseUrl = "http://amion.com/cgi-bin/ocs"
-AmionLogin = {"login" : "ucsfpeds"}
 req0 = requests.post(baseUrl, data=AmionLogin)
 # print(r.text) # This is outputting the html of the actual schedule landing page
 
 html = req0.content # And this stores that html as a string
-nextDay = '<a href=".(\S+?)"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
 
 # This finds suffix of Next Day link from Amion landing page. Returns a list,
 # hopefully len=1, so stores index 0 to pass into the while loop:
@@ -300,15 +316,19 @@ while tracker < endDate:
 ######### End Loop ##############################################################
 
 # print allDays
-# {'2016-01-10': {'dayScore': -1, 'data': [{'shifts': ['UCW3-Day'], 'score': -1,
-# 'AmionName': 'Sun-V', 'missing': 0, 'block': 'ORANGE3'}, {'shifts': ['Not Found'], 'score': 0,
-# 'AmionName': 'Wu-L', 'missing': 1, 'block': 'DB'}]}}
+# {'2016-01-10': {'dayScore': -1, 'data':
+    # [{'shifts': ['UCW3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0, 'block': 'ORANGE3'},
+     # {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1, 'block': 'DB'}
+     # ]
+    # }
+  # }
 
 # In case you need it for offline work (not updated for block lookup):
 # allDaysSample = {'2016-01-13': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-12': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-15': {'dayScore': -2, 'data': [{'shifts': ['UCW3-Nite'], 'score': -2, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}, '2016-01-14': {'dayScore': -1, 'data': [{'shifts': ['ORANGE3-Day'], 'score': -1, 'AmionName': 'Sun-V', 'missing': 0}, {'shifts': ['Not Found'], 'score': 0, 'AmionName': 'Wu-L', 'missing': 1}]}}
 
 #################################################################################
 ### Count & score the next day for post-call residents
+### Also, score impossible when block == 'VAC'
 #################################################################################
 for day in allDays:
     postCallDay = 0
@@ -321,36 +341,20 @@ for day in allDays:
             allDays[postDay][dayScoreN] += (scoreDict[postCallN] * postCallDay)
             allDays[postDay][postCallN] = postCallDay
     except KeyError: pass
-#################################################################################
-### Score impossible for vacation days
-#################################################################################
 
-vacInputGroups = re.findall('\((.*?)\)', vacationInput, re.M)
-vacTupules = []
-for vac in vacInputGroups:
-    startDate = vac[:vac.find(',')]
-    moStart = int(startDate[:startDate.find('/')])
-    dayStart = int(startDate[vac.find('/')+1:])
-    endDate = vac[vac.find(',')+1:]
-    moEnd = int(endDate[:endDate.find('/')])
-    dayEnd = int(endDate[endDate.find('/')+1:])
-    if moStart > 6: yearStart = fallYear
-    else: yearStart = springYear
-    if moEnd > 6: yearEnd = fallYear
-    else: yearEnd = springYear
-    startDate = DT.date(yearStart, moStart, dayStart)
-    endDate = DT.date(yearEnd, moEnd, dayEnd)
-    dateTupule = (startDate, endDate)
-    vacTupules.append(dateTupule)
-
-for vac in vacTupules:
-    for day in allDays:
-        if day > vac[0] and day <= vac[1]:
-            allDays[day][dayScoreN] += -2
+    # Score impossible for vacation days - v2 using the block lookUp
+    data = allDays[day]['data'] #List of dicts: [{'missing': 0, 'AmionName': 'Sun-V', 'shifts': ['UCW3-Nite'], 'score': -2, 'night': 1, 'block': 'ORANGE3'},
+    # {'missing': 1, 'AmionName': 'Brim-R', 'shifts': ['Not Found'], 'score': 0,
+    # 'night': 0, 'block': 'JEOP'},...]
+    # Score impossible for vacation days
+    for resDict in data:
+        if resDict['block'] == vacation:
+            allDays[day][dayScoreN] += scoreDict['impossible']
 
 #################################################################################
 ### Rank by score, write to csv
 #################################################################################
+candidatesTable = ''
 fh = open(csvOut, 'wb')
 csvwriter = csv.writer(fh, quotechar=' ')
 outHeaders = ['date', 'dayOfWeek', dayScoreN, postCallN]
@@ -375,21 +379,44 @@ for day in sorted(allDays.items(), key=lambda x: x[1][dayScoreN],
                     increment = shift + '/' + block + ' '
                     shiftStr += increment
                 row.append(shiftStr)
-            print row
+            # print row
             csvwriter.writerow(row)
         counter +=1
 fh.close()
 
-'''
-allDaysSample[day][dayScoreN] returns the score
-'''
+# allDaysSample[day][dayScoreN] returns the score
+
+# try:
+################################################################################
+### Output to html (or print to stdout)
+################################################################################
+if errMessage == '': errMessage = 'No errors - hooray!'
+templateVars = dict(message=message, csvIn=csvIn, updated=updated,
+                    csvOut=csvOut, errMessage=errMessage,
+                    candidates=candidates, candidatesTable=candidatesTable
+                    )
+main = ''
+with open(htmlTemplate, 'r') as temp:
+    htmlTemp = temp.read()
+    main = string.Template(htmlTemp).safe_substitute(templateVars)
+
+templateVars = dict(version=version, title=title, subtitle=subtitle, main=main
+                )
+with open(frameTemplate, 'r') as temp:
+    htmlTemp = temp.read()
+    finalHTML = string.Template(htmlTemp).safe_substitute(templateVars)
+    print finalHTML
+
+# except:
+    # print '<h1>Whoa! Something went wrong with the data output!</h1>'
+    # print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
 
 
 
 
-
-
-
+#################################################################################
+### Old bits of code
+#################################################################################
 
 '''
 Archive of working bits for re etc:
@@ -406,3 +433,66 @@ tar2 = 'Next day'
 tar3 = '<a href="./ocs?File=!52dc6d6blwaudangbu&Page=OnSh&Fsiz=-2&Jdo=1&Sbcid=6"><IMG SRC="../oci/frame_rt.gif" WIDTH=15 HEIGHT=14 BORDER=0 TITLE="Next day">'
 '''
 
+#################################################################################
+### Score impossible for vacation days
+# This was the old way to score for vacation days before I built blockParse to
+# lookup the block schedule (in addition to the daily shift). Vacations were
+# lost in that original approach and so vacation dates had to be added manually.
+# With blockParse storing the whole Amion block schedule now, it's really easy
+# to adjust the score for vacations. This is done above in the same loop that
+# scores for post-call. I keep this code here for historical storage.
+#################################################################################
+'''
+Obsolete but a nice exercise in form parsing. This is no longer needed as I
+updated podSched to use the allRes / blockParse data to score vacation days
+automatically.
+vacTupules = []
+try:
+    vacStartsIn = form.getlist('vacStart')
+    vacStopsIn = form.getlist('vacStop')
+    assert (len(vacStartsIn) == len(vacStopsIn))
+    for i, start in enumerate(vacStartsIn):
+        assert (start < vacStopsIn[i])
+        startI = cgi.escape(start)
+        startI = startI[:10]
+        startI = DT.datetime.strptime(startI, '%Y-%m-%d')
+        startD = startI.date()
+
+        stopI = cgi.escape(vacStopsIn[i])
+        stopI = stopI[:10]
+        stopI = DT.datetime.strptime(stopI, '%Y-%m-%d')
+        stopD = stopI.date()
+        vacTupule = (startD, stopD)
+        vacTupules.append(vacTupule)
+except:
+    errMessage += 'Whoa! Something went wrong with vacation date entry, e.g., not all were entered as start/stop pairs or start date after stop date.<br>'
+
+print vacTupules
+print '<br>'
+'''
+
+'''
+vacationInput = '(5/9,5/12) (1/30,2/14) (1/30,2/14)' # Will want to make this raw_input
+vacInputGroups = re.findall('\((.*?)\)', vacationInput, re.M)
+vacTupules = []
+for vac in vacInputGroups:
+    startDate = vac[:vac.find(',')]
+    moStart = int(startDate[:startDate.find('/')])
+    dayStart = int(startDate[vac.find('/')+1:])
+    endDate = vac[vac.find(',')+1:]
+    moEnd = int(endDate[:endDate.find('/')])
+    dayEnd = int(endDate[endDate.find('/')+1:])
+    if moStart > 6: yearStart = fallYear
+    else: yearStart = springYear
+    if moEnd > 6: yearEnd = fallYear
+    else: yearEnd = springYear
+    startDate = DT.date(yearStart, moStart, dayStart)
+    endDate = DT.date(yearEnd, moEnd, dayEnd)
+    dateTupule = (startDate, endDate)
+    vacTupules.append(dateTupule)
+
+for vac in vacTupules:
+    for day in allDays:
+        if day > vac[0] and day <= vac[1]:
+            allDays[day][dayScoreN] += -2
+'''
