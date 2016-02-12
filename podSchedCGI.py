@@ -88,7 +88,7 @@ AmionNames = []
 
 try:
     import cgi; import cgitb
-    cgitb.enable()
+    # cgitb.enable()
     form = cgi.FieldStorage()
 except:
     errMessage += 'Whoa! Something went wrong with the CGI initialization.'

@@ -68,7 +68,7 @@ from allResStr import block1split23
 import cgi
 import cgitb
 print 'Content-Type: text/html\r\n\r\n'
-cgitb.enable()
+# cgitb.enable()
 form = cgi.FieldStorage() # instantiate only once!
 
 try:

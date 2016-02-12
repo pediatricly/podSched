@@ -75,7 +75,7 @@ errRes = set()
 import cgi
 import cgitb
 print 'Content-Type: text/html\r\n\r\n'
-cgitb.enable()
+# cgitb.enable()
 form = cgi.FieldStorage() # instantiate only once!
 
 # try:

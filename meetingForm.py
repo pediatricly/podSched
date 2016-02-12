@@ -8,7 +8,7 @@ from string import Template
 ################################################################################
 import cgi
 import cgitb
-cgitb.enable()
+# cgitb.enable()
 print 'Content-Type: text/html\r\n\r\n'
 ################################################################################
 ### Globals & Setup

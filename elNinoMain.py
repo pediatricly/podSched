@@ -9,7 +9,7 @@ from allResStr import updated
 ################################################################################
 import cgi
 import cgitb
-cgitb.enable()
+# cgitb.enable()
 print 'Content-Type: text/html\r\n\r\n'
 ################################################################################
 ### Globals & Setup
