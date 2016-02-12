@@ -89,9 +89,9 @@ classesIn = form.getlist('classI')
     # Avoid script injection escaping the user input
 
 if firstBlockIn != '':
-    firstBlock = int(cgi.escape(firstBlockI))
+    firstBlock = int(cgi.escape(firstBlockIn))
 if lastBlockIn != '':
-    lastBlock = int(cgi.escape(lastBlockI))
+    lastBlock = int(cgi.escape(lastBlockIn))
 
 if len(classesIn) > 0:
     classes = []

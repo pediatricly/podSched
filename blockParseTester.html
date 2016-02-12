@@ -1,0 +1,111 @@
+
+
+<!DOCTYPE html>
+<html>
+      <head>
+              <meta charset="utf-8">
+              <meta name="description" content="Updater - El Nino - UCSF Peds">
+              <link rel="stylesheet" href="elNino.css">
+
+	      <title>El Nino - Updater</title>
+      </head>
+
+      <body>
+		<header>
+		<figure><img src = "http://www.pediatricly.com/images/elNino/elNinoLogo.jpg" width = "40%" alt = "I am the mighty El Nino" id="mainIcon"/></figure>
+            <h1>I am the mighty El Nino!<br>
+            Updater</h1>
+            <h2>blockParse Output</h2>
+            
+            <div id="subtitle"><h4>For those of you who no habla espanol, El Nino is Spanish for...The Nino.</h4></div>
+    
+            <nav><ul><li><a href="http://pediatricly.com/cgi-bin/elNino/elNinoMain.py">Main</a></li>
+            <li><a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">Meeting Planner</a></li>
+        </ul></nav>
+            
+            
+</header>
+
+
+
+<main>
+<h3>Thank you for updating El Nino!</h3>
+<hr>
+<div class="output" id="errorLog">
+<h4>But first, check for errors!</h4>
+    <p>Any messages here are potentially troublesome as they may indicate problems parsing Amion.</p>
+        <p class="message">Hooray! No errors!</p>
+<p>It is possible errors may give seemingly complete but actually inaccurate output, so please sanity check any results (if you get errors that persist despite double-checking your input).</p>
+</div>
+
+<hr>   
+
+<h4>This should have updated these main output files:</h4>
+<!--Main output files from blockParse are linked here.-->
+<div class="output" id="outputLinks">
+    <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/allResPrinter.py" target="_blank">allResStr.py</a>
+        <ul><li>Contains the main data, all resident schedules and block dates, as a Python file.</li>
+            <li>You'll probably never look at this but nice to know it's there. (And to have it for debugging.)</li>
+            </ul></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/CoCprinter.py" target="_blank">CoC.csv</a>
+            <ul><li>Simple spreadsheet (csv) of all the residents' Amion names with their continuity clinic day as listed in Amion. (NB: Will have weird/missing output for chiefs and super-seniors.)</li>
+                <li>Very useful for the schedule template spreadsheets.</li>
+                <li>After it loads in your browser, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">allRotations.csv</a>
+            <ul><li>Even simpler csv, just a list of all the rotations in this year's block schedule across all years.</li>
+                <li>Very useful for the other El Nino functions where you'll need scores or expected values for each rotation.</li>
+                <li>Same deal, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
+        <li>NB: These links are actually to other Python CGI scripts that just prints the data file. You can't directly download the files for security reasons.</li></ul>
+</div>
+
+<!--Summary Stats Printed Here-->
+<div class="output" id="summaryStats">
+<p>Here are some <b>summary stats</b> for sanity checking. El Nino scraped data on:
+    <ul><li>1554 rotations in total. Typical is very roughly 1500.</li>   
+        <li>91 residents in total. Typical is about 90.
+            <ul><li>R3s: Ainsworth-A, Arora-K, Balkin-E, Bares-A, Beckert-R, Bent-M, Brajkovic-I, Brim-R, Chong-A, Doshi-N, Goudy-B, Haluck,Ning, Harper-L, Hayward-L, Huibregtse-K, Ip-W, Jablon-K, LaRocca-T, Maurer-L, Neely-J, Niedfeld-M, Ort-K, Pantell-M, Scahill-M, Suarez-D, Sun-V, Sznewajs,Aimee, Thein-K, Thompson-D, Wasio-L, West-E, Woo-K, Wu-P, </li>
+                <li>R2s: Adamson-G, Andler-C, Braun-L, Cooch-P, Crouch-E, Davenport-J, Davis-M, Emmott-M, Hammoudi-T, Haro-S, Hart-Cooper-G, Johnson-Kerner-B, Keller-S, Knappe-A, Kodali-S, Koo-J, Kramer-K, Laguna-M, Links-B, Madduri-G, Oo-H, Sane-M, Sundby-T, Truong-B, Vaisberg-K, Vinh-L, Wietstock-S, Wu-L, co, u, </li>
+                <li>R1s: Argueza-B, Burnett-H, Caffarelli-M, Chen-D, CribbFabersunne-C, Frank-E, Gal-D, Guslits-E, Hao-R, Iacopetti-C, Liou-A, Maddox-J, McBride-D, Nash-D, Nguyen-J, Peitzman-E, Robinson-M, SchafferDeRoo-S, Schwartz-R, Shalen-J, Simmons-R, Singal-P, Spiegel-E, Spitznagle-J, Steinberg-E, Tsen-D, Wohlford-E, Yang-E, </li></ul></li>
+        <li>Your new update date is 2016-02-11 (yyyy-mm-dd).</li>
+        <li>Your block 1 split dates are:
+            <ul><li>2015-07-06 for R1s (yyyy-mm-dd)</li>
+                <li>2015-07-13 for R2s and R3s (yyyy-mm-dd)</li></ul></li></ul>
+</p></div>
+</main>
+             
+
+
+<footer>
+    <details><summary>How does El Nino work?</summary>
+            <p>El Nino reads the messy schedule data on the Amion website and turns it into something only a robot could love - beautifully elaborate, machine-readable data on the entire residency program's schedule. This has some great uses:
+                <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a></li>
+                        <ul><li>Tally up how much cash to put on meal cards based on their rotation week-by-week.</li>
+                        </ul></li>
+                    <li>confAttend - not available online yet
+                        <ul><li>Get the "denominator" for conference attendence. Count up how many conferences residents should have attended based on their block schedules.</li>
+                        </ul></li>
+                    <li><a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">Meeting Planner</a>
+                        <ul><li>Getting multiple residents on different schedules in the same place at the same time is a pain!</li>
+                            <li>Meeting Planner goes through an arbitrary subset of residents' schedules and outputs a ranked, scored list of dates when they are on the most aligned and convenient rotations.</li>
+                            <li>For example, if you want to schedule an evening meeting, you can score for shifts that end around 5pm to pick an evening when everyone is available. (Hence the original name "podSched" - this was developed to schedule PLUS pod dinners.)</li>                           </ul></li></ul></p>
+            <p>BUT, to do any of this, you need to make sure El Nino is working with an updated schedule. We all know the Amion schedule changes frequently. And that's why it all starts with <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">Updater</a>.</p></details>
+    
+    
+    <p>This the mighty El Nino - Updater.<br>
+              This page was generated by a program called blockParseCGI.py.<br>
+              Developed by Mike in February 2015. <a href="http://lnkd.in/sCnSZw">Ping him</a> for feedback &amp; suggestions.</p>
+ 
+
+
+    <p>Looking beyond El Nino?<br>
+                  <a href="https://wiki.library.ucsf.edu/display/PedsHouse/UCSF+Pediatrics+Wiki">Peds House Wiki</a><br>
+                  <a href="http://pediatrics.ucsf.edu/medical-education/residency">Peds Residency Homepage</a><br>
+                  <a href="http://pediatrics.ucsf.edu/medical-education/residency/program-design/programs-tracks-and-pathways/plus-program">PLUS Program</a><br>
+                  </p>
+              </footer>
+              </body>
+              </html>
+
+

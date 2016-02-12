@@ -1,7 +1,17 @@
-<h2>Congratulations! You have just updated El Nino's database!</h2>
+<h3>Thank you for updating El Nino!</h3>
+<hr>
+<div class="output" id="errorLog">
+<h4>But first, check for errors!</h4>
+    <p>Any messages here are potentially troublesome as they may indicate problems parsing Amion.</p>
+        <p class="message">$errMessage</p>
+<p>It is possible errors may give seemingly complete but actually inaccurate output, so please sanity check any results (if you get errors that persist despite double-checking your input).</p>
+</div>
+
+<hr>   
+
+<h4>This should have updated these main output files:</h4>
 <!--Main output files from blockParse are linked here.-->
 <div class="output" id="outputLinks">
-<p>This should have updated these main output files: 
     <ul><li><a href="http://pediatricly.com/cgi-bin/elNino/allResPrinter.py" target="_blank">$outfile</a>
         <ul><li>Contains the main data, all resident schedules and block dates, as a Python file.</li>
             <li>You'll probably never look at this but nice to know it's there. (And to have it for debugging.)</li>
@@ -15,11 +25,11 @@
                 <li>Very useful for the other El Nino functions where you'll need scores or expected values for each rotation.</li>
                 <li>Same deal, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li></ul></li>
         <li>NB: These links are actually to other Python CGI scripts that just prints the data file. You can't directly download the files for security reasons.</li></ul>
-</p></div>
+</div>
 
 <!--Summary Stats Printed Here-->
 <div class="output" id="summaryStats">
-<p>Here are some summary stats for sanity checking. El Nino scraped data on:
+<p>Here are some <b>summary stats</b> for sanity checking. El Nino scraped data on:
     <ul><li>$totalRots rotations in total. Typical is very roughly 1500.</li>   
         <li>$totRes residents in total. Typical is about 90.
             <ul><li>R3s: $R3str</li>

@@ -65,6 +65,7 @@ from allResStr import block1split23
 ################################################################################
 ### CGI Setup
 ################################################################################
+'''
 import cgi
 import cgitb
 print 'Content-Type: text/html\r\n\r\n'
@@ -90,17 +91,16 @@ try:
 except:
     print '<h1>Whoa! Something went wrong with the block1 split date entry!</h1>'
     print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
+'''
 # Specifcy the block 1 split manually because the computer may guess wrong
 # block1split1 = DT.date(2015, 7, 6)
 # block1split23 = DT.date(2015, 7, 13)
 
 # Un-comment these if turning off CGI to parse imported blockSplits
-'''
 block1split1= DT.datetime.strptime(block1split1, "%Y-%m-%d")
 block1split23= DT.datetime.strptime(block1split23, "%Y-%m-%d")
 block1split1 = block1split1.date()
 block1split23 = block1split23.date()
-'''
 ################################################################################
 ### Globals & Setup
 ################################################################################
