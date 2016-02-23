@@ -161,7 +161,8 @@ if today.month > 6:
 else:
     springYear = int(today.year)
     fallYear = springYear -1
-tracker = startDate
+# tracker = startDate
+tracker = today
 # days = (endDate - startDate)
 increment = DT.timedelta(days=1)
 
@@ -276,13 +277,14 @@ nextLink = re.findall(nextDay, html, re.M)[0]
 #################################################################################
 while tracker < endDate:
     # Skip this loop if before startDate
+    reqI = requests.get(baseUrl + nextLink)
+    htmlI = reqI.content
+    nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
     if tracker < startDate:
+        print tracker
         tracker = tracker + increment # Don't lose. Tracks date, break while loop.
         continue
     else:
-        reqI = requests.get(baseUrl + nextLink)
-        htmlI = reqI.content
-        nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
         lookUp = amionLookup(AmionNames, htmlI, allRes) # Lookup date & shift given AmionNames
 
 #################################################################################

@@ -203,14 +203,14 @@ nextLink = re.findall(nextDay, html, re.M)[0]
 ### Loop through Amion lookups day-by-day from tomorrow till endDate
 #################################################################################
 while tracker < endDate:
+    reqI = requests.get(baseUrl + nextLink)
+    htmlI = reqI.content
+    nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
     # Skip this loop if before startDate
     if tracker < startDate:
         tracker = tracker + increment # Don't lose. Tracks date, break while loop.
         continue
     else:
-        reqI = requests.get(baseUrl + nextLink)
-        htmlI = reqI.content
-        nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
         lookUp = amionLookup(AmionNames, htmlI, allRes) # Lookup date & shift given AmionNames
 
 #################################################################################
