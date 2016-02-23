@@ -103,8 +103,10 @@ def amionLookup(AmName, htmli, resDict):
     fullTable1 = re.findall("^<TR><td>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
     fullTable2 = re.findall("^<TR class=grbg><td>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
     fullTable3 = re.findall("^<TR><td></font><font color=#\w\w\w\w\w\w>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
+    tar4 ="^<TR class=grbg><td></font><font color=#\w\w\w\w\w\w>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>"
+    fullTable4 = re.findall(tar4, htmli, re.M)
 
-    listofTables = [fullTable1, fullTable2, fullTable3]
+    listofTables = [fullTable1, fullTable2, fullTable3, fullTable4]
     resRotList =  []
     for subTable in listofTables:
         for rotation, resident in subTable:
@@ -201,10 +203,15 @@ nextLink = re.findall(nextDay, html, re.M)[0]
 ### Loop through Amion lookups day-by-day from tomorrow till endDate
 #################################################################################
 while tracker < endDate:
-    reqI = requests.get(baseUrl + nextLink)
-    htmlI = reqI.content
-    nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
-    lookUp = amionLookup(AmionNames, htmlI, allRes) # Lookup date & shift given AmionNames
+    # Skip this loop if before startDate
+    if tracker < startDate:
+        tracker = tracker + increment # Don't lose. Tracks date, break while loop.
+        continue
+    else:
+        reqI = requests.get(baseUrl + nextLink)
+        htmlI = reqI.content
+        nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
+        lookUp = amionLookup(AmionNames, htmlI, allRes) # Lookup date & shift given AmionNames
 
 #################################################################################
 # This section sets up the data analysis & is what changes for different
@@ -215,31 +222,31 @@ while tracker < endDate:
 # I thought the single loop might be a little fast for big searches.
 # Other uses: lookup conference expectations by shift & store by resident / by
 # month for conference tracker
-    data = lookUp.values()[0]
-    dayList = []
-    for resident in data:
-        shifts = resident['shifts']
-        try:
-            for shift in shifts:
-                shiftData = rotsQualDict[shift]
-                shiftScore = 0
-                shiftScore += shiftData[score]
-                if shiftData[nightN] == '1': resident[nightN] = 1
-                else: resident[nightN] = 0
-            resident[score] = shiftScore
-            resident['missing'] = 0
-        except KeyError:
-            resident[score] = 0
-            resident['missing'] = 1
-            resident[nightN] = 0
-        dayList.append(resident)
-    dayScore = 0
-    for resident in dayList:
-        dayScore += resident[score]
-    allDays[lookUp.keys()[0]] = {dayScoreN : dayScore, postCallN : 0, 'data' :dayList}
+        data = lookUp.values()[0]
+        dayList = []
+        for resident in data:
+            shifts = resident['shifts']
+            try:
+                for shift in shifts:
+                    shiftData = rotsQualDict[shift]
+                    shiftScore = 0
+                    shiftScore += shiftData[score]
+                    if shiftData[nightN] == '1': resident[nightN] = 1
+                    else: resident[nightN] = 0
+                resident[score] = shiftScore
+                resident['missing'] = 0
+            except KeyError:
+                resident[score] = 0
+                resident['missing'] = 1
+                resident[nightN] = 0
+            dayList.append(resident)
+        dayScore = 0
+        for resident in dayList:
+            dayScore += resident[score]
+        allDays[lookUp.keys()[0]] = {dayScoreN : dayScore, postCallN : 0, 'data' :dayList}
 #################################################################################
 
-    tracker = tracker + increment # Don't lose. Tracks date, break while loop.
+        tracker = tracker + increment # Don't lose. Tracks date, break while loop.
 
 # for day in allDays:
     # print allDays[day]
