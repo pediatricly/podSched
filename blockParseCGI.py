@@ -89,7 +89,12 @@ try:
     block1split23 = block1split23.date()
 except:
     print '<h1>Whoa! Something went wrong with the block1 split date entry!</h1>'
-    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
+    print '''
+    <p>If you are seeing this message, please double check any dates you entered.
+    <ul><li>Some browsers, eg Google Chrome, should have shown you a special entry box for dates.</li>
+        <li>If your browser, eg Firefox, just had a text box, you must enter the date as YYYY-MM-DD.</li>
+        <li>If you enter the wrong year, or the next year's data before Amion defaults to next year, it will produce an error.</li>
+        <li>If you still get this error after fixing the dates you entered, contact Mike. :(</li></ul>'''
 # Specifcy the block 1 split manually because the computer may guess wrong
 # block1split1 = DT.date(2015, 7, 6)
 # block1split23 = DT.date(2015, 7, 13)
