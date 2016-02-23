@@ -175,8 +175,10 @@ def amionLookup(AmName, htmli, resDict):
     fullTable1 = re.findall("^<TR><td>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
     fullTable2 = re.findall("^<TR class=grbg><td>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
     fullTable3 = re.findall("^<TR><td></font><font color=#\w\w\w\w\w\w>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>", htmli, re.M)
+    tar4 ="^<TR class=grbg><td></font><font color=#\w\w\w\w\w\w>([\w\s&-;]+?)<.*<nobr>(.*)</b></a>"
+    fullTable4 = re.findall(tar4, htmli, re.M)
 
-    listofTables = [fullTable1, fullTable2, fullTable3]
+    listofTables = [fullTable1, fullTable2, fullTable3, fullTable4]
     resRotList =  []
     for subTable in listofTables:
         for rotation, resident in subTable:
