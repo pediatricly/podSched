@@ -49,6 +49,7 @@ Notable Bugs / Versions:
     event data from cleanDict into data was using the wrong block variable
     (block instead of blockI) that led to events being added to the wrong block.
     Seems to work accurately across R1s & R3s (tested on Ainsworth & Shalen) now.
+    - 23feb16: Added dicts to set conf start times that vary by weekday
 
 
 Features to add:
@@ -83,12 +84,12 @@ badgeDir = 'badgeDir.csv'
 confByWeek = 'conferencesByWeek.csv'
 csvOutFile = 'confAttendOut.csv'
 
-amConfStartHr = 8 # Start time hours
-amConfStartMin = 0 # Start time minutes
+# Used just 1, now set start times individually for every weekday. Uses the
+# Python date.weekday() function where Mon = 0, Fri = 4. These are assembled
+# into dicts of tupules of datetime objects in the loops below.
+amStartsIn = {0:(8,0), 1:(8,15), 2:(8,0), 3:(8,15), 4:(8,0)}
 amTol = 60 # Tolerance for what you'll call an AM conf time stamp, in MINUTES
-
-noonConfStartHr = 12 # Start time hours
-noonConfStartMin = 15 # Start time minutes
+noonStartsIn = {0:(12,0), 1:(12,0), 2:(12,0), 3:(12,0), 4:(12,0)}
 noonTol = 60 # Tolerance for what you'll call an noon conf time stamp, in MINUTES
 
 ########## Will probably never change these #############
@@ -113,19 +114,29 @@ errList =[]
 ##########################################################
 # Do this round-about datetime object thing to save the hassle of parsing time.
 # Need datetime objects to utilize timedelta
-amConfStart = DT.datetime(2016,1,1,amConfStartHr,amConfStartMin,0)
-amCutoffPre = amConfStart - DT.timedelta(minutes=amTol)
-amCutoffPost = amConfStart + DT.timedelta(minutes=amTol)
-amConfStart = DT.time(amConfStart.hour,amConfStart.minute)
-amCutoffPre = DT.time(amCutoffPre.hour, amCutoffPre.minute)
-amCutoffPost = DT.time(amCutoffPost.hour, amCutoffPost.minute)
+amStarts = {}
+for day in amStartsIn:
+    hour = amStartsIn[day][0]
+    minute = amStartsIn[day][1]
+    amConfStart = DT.datetime(2016,1,1,hour,minute,0)
+    amCutoffPre = amConfStart - DT.timedelta(minutes=amTol)
+    amCutoffPost = amConfStart + DT.timedelta(minutes=amTol)
+    amConfStart = DT.time(amConfStart.hour,amConfStart.minute)
+    amCutoffPre = DT.time(amCutoffPre.hour, amCutoffPre.minute)
+    amCutoffPost = DT.time(amCutoffPost.hour, amCutoffPost.minute)
+    amStarts[day] = (amConfStart, amCutoffPre, amCutoffPost)
 
-noonConfStart = DT.datetime(2016,1,1,noonConfStartHr,noonConfStartMin,0)
-noonCutoffPre = noonConfStart - DT.timedelta(minutes=noonTol)
-noonCutoffPost = noonConfStart + DT.timedelta(minutes=noonTol)
-noonConfStart = DT.time(noonConfStart.hour,noonConfStart.minute)
-noonCutoffPre = DT.time(noonCutoffPre.hour, noonCutoffPre.minute)
-noonCutoffPost = DT.time(noonCutoffPost.hour, noonCutoffPost.minute)
+noonStarts = {}
+for day in noonStartsIn:
+    hour = noonStartsIn[day][0]
+    minute = noonStartsIn[day][1]
+    noonConfStart = DT.datetime(2016,1,1,hour,minute,0)
+    noonCutoffPre = noonConfStart - DT.timedelta(minutes=noonTol)
+    noonCutoffPost = noonConfStart + DT.timedelta(minutes=noonTol)
+    noonConfStart = DT.time(noonConfStart.hour,noonConfStart.minute)
+    noonCutoffPre = DT.time(noonCutoffPre.hour, noonCutoffPre.minute)
+    noonCutoffPost = DT.time(noonCutoffPost.hour, noonCutoffPost.minute)
+    noonStarts[day] = (noonConfStart, noonCutoffPre, noonCutoffPost)
 
 #########################################################
 ### Read the dir of CSVs
@@ -149,6 +160,13 @@ for item in masterSet:
     slash1 = date1.find('/')
     slash2 = date1.find('/', slash1+1)
     date = DT.date(int(date1[slash2+1:])+2000, int(date1[:slash1]), int(date1[slash1+1:slash2]))
+    wkday = date.weekday()
+    amConfStartI = amStarts[wkday][0]
+    amCutoffPreI = amStarts[wkday][1]
+    amCutoffPostI = amStarts[wkday][2]
+    noonConfStartI = noonStarts[wkday][0]
+    noonCutoffPreI = noonStarts[wkday][1]
+    noonCutoffPostI = noonStarts[wkday][2]
     ap = split1[2]
     time1 = split1[1]
     colon1 = time1.find(':')
@@ -165,20 +183,20 @@ for item in masterSet:
             time = DT.time(int(time1[:colon1]), int(time1[colon1+1:colon2]), int(time1[colon2+1:]))
     tempDict = {'date':date, 'time': time, 'badge':item[1]}
 
-    if time <= amCutoffPost and time >= amCutoffPre:
+    if time <= amCutoffPostI and time >= amCutoffPreI:
         tempDict['conf'] = 'am'
-        hrLate = time.hour - amConfStart.hour
+        hrLate = time.hour - amConfStartI.hour
         if hrLate < 0: minLate = 0
         else:
-            minLate = max(time.minute - amConfStart.minute, 0)
+            minLate = max(time.minute - amConfStartI.minute, 0)
             minLate = minLate + hrLate*60
         tempDict['minLate'] = minLate
-    elif time <= noonCutoffPost and time >= noonCutoffPre:
+    elif time <= noonCutoffPostI and time >= noonCutoffPreI:
         tempDict['conf'] = 'noon'
-        hrLate = time.hour - noonConfStart.hour
+        hrLate = time.hour - noonConfStartI.hour
         if hrLate < 0: minLate = 0
         else:
-            minLate = max(time.minute - noonConfStart.minute, 0)
+            minLate = max(time.minute - noonConfStartI.minute, 0)
             minLate = minLate + hrLate*60
         tempDict['minLate'] = minLate
     else: tempDict['conf'] = 'unknown'
