@@ -2,6 +2,7 @@
 import csv
 import datetime as DT
 import os.path
+from string import Template
 from allResStr import allRes as allRes
 # from shalStr import aString as allRes
 from allResStr import blockStarts23
@@ -25,18 +26,29 @@ csvDirName = 'badgeScanCSVs'
 badgeDir = 'badgeDir.csv'
 confByWeek = 'conferencesByWeek.csv'
 csvOutFile = 'confAttendOut.csv'
+title = 'Conference Attendance'
+subtitle = 'Results'
+frameTemplate = 'elNinoFrame.html'
+htmlTemplate = 'confAttendTemplate.html'
+filesInF = 'filesIn.txt'
 today = DT.date.today()
 todayStr = today.isoformat()
 
 message = ''
 errMessage = ''
+errRots = []
+errRotStr = '<tr><th>Resident</th><th>Block</th><th>Rotation</th></tr>'
+errRotStrOrig = '<tr><th>Resident</th><th>Block</th><th>Rotation</th></tr>'
+filesIn = '<tr><th>CSV Filename</th></tr>'
 # Used just 1, now set start times individually for every weekday. Uses the
 # Python date.weekday() function where Mon = 0, Fri = 4. These are assembled
 # into dicts of tupules of datetime objects in the loops below.
-amStartsIn = {0:(8,0), 1:(8,15), 2:(8,0), 3:(8,15), 4:(8,0)}
+amStartsIn = {0:(8,0), 1:(8,30), 2:(8,0), 3:(8,30), 4:(8,0)}
 amTol = 60 # Tolerance for what you'll call an AM conf time stamp, in MINUTES
-noonStartsIn = {0:(12,0), 1:(12,0), 2:(12,0), 3:(12,0), 4:(12,0)}
+amStr = '<tr><th>Day of Week</th><th>Time</th></tr>'
+noonStartsIn = {0:(12,15), 1:(12,15), 2:(12,15), 3:(12,15), 4:(12,15)}
 noonTol = 60 # Tolerance for what you'll call an noon conf time stamp, in MINUTES
+noonStr = '<tr><th>Day of Week</th><th>Time</th></tr>'
 
 ########## Will probably never change these #############
 classes = [1,2,3]
@@ -48,6 +60,8 @@ headers1 = ['Blocks:']
 headers2 = ['AmionName']
 headers2pattern = ['AM Attended', 'AM Expected', 'AM %', 'Avg Min Late',
                    'Noon Attended', 'Noon Expected', 'Noon %', 'Avg Noon Min Late']
+superSeniors = ['Wasio-L', 'Haluck,Ning', 'Scahill-M', 'Thein-K', 'Bares-A',
+                'Sznewajs,Aimee']
 ###############################################################################
 ### CGI Setup
 ################################################################################
@@ -62,6 +76,7 @@ form = cgi.FieldStorage() # instantiate only once!
 firstBlockIn = form.getfirst('firstBlock', '')
 lastBlockIn = form.getfirst('lastBlock', '')
 classesIn = form.getlist('classI')
+fileStrs = ['confCSV1', 'confCSV2', 'confCSV3', 'confCSV4', 'confCSV5', 'confCSV6', 'confCSV7']
 # except:
     # print '<h1>Whoa! Something went wrong with the data entry!</h1>'
     # print '<h1>If you are seeing this message, please double the data you entered, the output summary below and try again. If you still get this error, contact Mike. :(</h1>'
@@ -69,16 +84,12 @@ classesIn = form.getlist('classI')
 
 if firstBlockIn != '':
     firstBlock = int(cgi.escape(firstBlockIn))
-    message += 'Used your first block selection %d' % firstBlock
-else: message += 'Used default first block %d' % firstBlock
+    message += 'Used your first block selection %d.<br>' % firstBlock
+else: message += 'Used default first block %d.<br>' % firstBlock
 if lastBlockIn != '':
     lastBlock = int(cgi.escape(lastBlockIn))
-    message += 'Used your last block selection %d' % lastBlock
-else: message += 'Used default last block %d' % lastBlock
-
-
-print str(firstBlock) + '<br>'
-print str(lastBlock) + '<br>'
+    message += 'Used your last block selection %d.<br>' % lastBlock
+else: message += 'Used default last block %d.<br>' % lastBlock
 
 if len(classesIn) > 0:
     classes = []
@@ -86,15 +97,14 @@ if len(classesIn) > 0:
         classI = int(cgi.escape(classI))
         classes.append(classI)
         classesStr += str(classI)
-    message += 'Used your classes selection %s' % classesStr
+    message += 'Used your classes selection %s.<br>' % classesStr[:-2]
 else:
     for classI in classes:
-        classesStr += str(classI)
-        message += 'Used default classes %s' % classesStr
-print classesStr + '<br>'
+        classesStr += str(classI) + ', '
+    message += 'Used default classes %s.<br>' % classesStr[:-2]
 
 ############  File Upload ###################################
-fileStrs = ['confCSV1', 'confCSV2', 'confCSV3', 'confCSV4', 'confCSV5', 'confCSV6', 'confCSV7']
+fileCount = 0
 for i, fileStr in enumerate(fileStrs):
     fileitem = form[fileStr]
 
@@ -106,10 +116,10 @@ for i, fileStr in enumerate(fileStrs):
         fn = os.path.basename(fileitem.filename)
         pathName = os.path.join(csvDirName,'log_'+todayStr+'_'+str(i+1)+'.csv')
         open(pathName, 'wb').write(fileitem.file.read())
-        message = ('The file "' + fn + '" was uploaded successfully and saved as '
-                   + pathName)
-    else:
-        message = 'No new badge log file was uploaded'
+        message += ('The file "' + fn + '" was uploaded successfully and saved as '
+                   + pathName + '.<br>')
+        fileCount += 1
+if fileCount == 0: message += 'No new badge log files uploaded.<br>'
 ##########################################################
 masterSet = set()
 prelimList = []
@@ -134,6 +144,7 @@ for day in amStartsIn:
     amCutoffPre = DT.time(amCutoffPre.hour, amCutoffPre.minute)
     amCutoffPost = DT.time(amCutoffPost.hour, amCutoffPost.minute)
     amStarts[day] = (amConfStart, amCutoffPre, amCutoffPost)
+    amStr += '<tr><td>' + str(day) + '</td><td>' + str(amConfStart.strftime('%H:%M')) + '</td></tr>'
 
 noonStarts = {}
 for day in noonStartsIn:
@@ -146,6 +157,7 @@ for day in noonStartsIn:
     noonCutoffPre = DT.time(noonCutoffPre.hour, noonCutoffPre.minute)
     noonCutoffPost = DT.time(noonCutoffPost.hour, noonCutoffPost.minute)
     noonStarts[day] = (noonConfStart, noonCutoffPre, noonCutoffPost)
+    noonStr += '<tr><td>' + str(day) + '</td><td>' + str(noonConfStart.strftime('%H:%M')) + '</td></tr>'
 
 #########################################################
 ### Read the dir of CSVs
@@ -161,6 +173,7 @@ for filename in directory:
             tupule = (row[0], row[1])
             masterSet.add(tupule)
         fh.close()
+        filesIn += '<tr><td>' + filename + '</td></tr>'
 
 for item in masterSet:
     timeStamp = item[0]
@@ -235,7 +248,7 @@ for item in prelimList:
         cleanDict[key] = result
         key += 1
 # print len(masterSet)
-# print len(cleanDict)
+message += 'Processed ' + str(len(cleanDict)) + ' unique badge scans.<br>'
 # print cleanDict
 # {1: {'date': datetime.date(2015, 12, 31), 'badge': '21378800165594', 'conf':
 #      'unknown', 'time': datetime.time(14, 30, 58)},
@@ -254,6 +267,7 @@ for row in reader:
     if row['AmionName'] != '':
         badgeDict[row['AmionName']] = row
 fh.close()
+message += "Used badge info (list of residents' badge numbers) from " + badgeDir + '.<br>'
 # print badgeDict
 # {'Simmons-R': {'Category 15-16': 'PGY-1', 'Name First': 'Roxanne', 'Name Middle':
               # 'Lynn', 'ID Number (employee)': '22157878', 'AmionName':
@@ -285,8 +299,8 @@ for key in cleanDict:
     cleanDict[key]['rotation'] = tupule[1]
     cleanDict[key]['block'] = tupule[0]
 
-for key in cleanDict:
-    print cleanDict[key]
+# for key in cleanDict:
+    # print cleanDict[key]
 # {{'minLate': 46, 'AmionName': 'Shalen-J', 'conf': 'am', 'time':
  # datetime.time(8, 46, 4), 'date': datetime.date(2016, 1, 26), 'rotation':
  # 'PURPLE1', 'badge': '21378800976610', 'block': 8}
@@ -339,6 +353,7 @@ for pgyYr in classes:
     endDay = DT.datetime.strptime(stops[lastBlock], '%Y-%m-%d')
 
     for res in allRes:
+        if res != 'co' and res != 'u':
             if allRes[res]['pgy'] == pgyYr:
                 tracker = firstMon
                 # tracker = tracker + DT.timedelta(7)
@@ -356,7 +371,9 @@ for pgyYr in classes:
                     except:
                         amWk = 0
                         noonWk = 0
-                        print res, tupule
+                        thruple = (res, tupule)
+                        errRots.append(thruple)
+                        # print res, tupule
                     try:
                         data[res][block]['expected']['am'] += amWk
                         data[res][block]['expected']['noon'] += noonWk
@@ -414,7 +431,7 @@ for res in data:
 # print data['Shalen-J']
 
 #########################################################
-### Write the output data
+### Write the output data CSV
 ##########################################################
 # These 2 blocks generate the multilevel headers to keep them aligned by blocks
 headers1suffix = [x for x in blocks for y in range(len(headers2pattern))]
@@ -445,4 +462,45 @@ with open(csvOutFile, 'wb') as csvOut:
             except: row.append('-')
             row.append(data[res][block]['actual']['noonLate'])
         writer.writerow(row)
+    message += 'Wrote data summary to ' + csvOutFile + '.<br>'
+
+with open(filesInF, 'wb') as filesInFH:
+    filesInFH.write(filesIn)
+    filesInFH.write('\n')
 # print data
+#########################################################
+### Write the output data to HTML
+##########################################################
+for err in errRots:
+    errRes = err[0]; errTupule = err[1]
+    if errRes not in superSeniors:
+        errBlock = errTupule[0]; errRot = errTupule[1]
+        errRotStr += '<tr><td>' + errRes + '</td><td>' + str(errBlock) + '</td><td>' + errRot + '</td><td></tr>'
+if errRotStr == errRotStrOrig:
+    errRotStr += '<tr><td>' + 'No errors!' + '</td><td>' + '' + '</td><td>' + 'Boom!' + '</td><td></tr>'
+
+try:
+    ################################################################################
+    ### Output to html (or print to stdout)
+    ################################################################################
+    templateVars = dict(message=message, csvOutFile=csvOutFile, filesInF=filesInF,
+                        confByWeek=confByWeek, updated=updated,
+                        amStr=amStr, noonStr=noonStr,
+                        classesStr=classesStr, firstBlock=str(firstBlock),
+                        lastBlock=str(lastBlock), filesIn=filesIn,
+                        errRotStr=errRotStr)
+    main = ''
+    with open(htmlTemplate, 'r') as temp:
+        htmlTemp = temp.read()
+        main = Template(htmlTemp).safe_substitute(templateVars)
+
+    templateVars = dict(version=version, title=title, subtitle=subtitle, main=main
+                    )
+    with open(frameTemplate, 'r') as temp:
+        htmlTemp = temp.read()
+        finalHTML = Template(htmlTemp).safe_substitute(templateVars)
+        print finalHTML
+
+except:
+    print '<h1>Whoa! Something went wrong with the data output!</h1>'
+    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'

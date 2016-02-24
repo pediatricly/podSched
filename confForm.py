@@ -7,7 +7,7 @@ from string import Template
 ################################################################################
 import cgi
 import cgitb
-# cgitb.enable()
+cgitb.enable()
 print 'Content-Type: text/html\r\n\r\n'
 ################################################################################
 ### Globals & Setup
@@ -18,11 +18,14 @@ title = 'Conference Attendance'
 subtitle = 'Input Form'
 frameTemplate = 'elNinoFrame.html'
 htmlTemplate = 'confFormTemplate.html'
+filesInF = 'filesIn.txt'
+with open(filesInF, 'rb') as fileF:
+    filesIn = fileF.read()
 ################################################################################
 ### Output to html (or print to stdout)
 ################################################################################
 
-templateVars = dict(updated=updated,
+templateVars = dict(updated=updated, filesIn=filesIn, filesInF=filesInF,
                     )
 main = ''
 with open(htmlTemplate, 'r') as temp:

@@ -1,0 +1,56 @@
+
+<h3>El Nino has just calculated all the resident attendance data you requested.</h3>
+<div class="output" id="summaryStats">
+<h4>Parameters</h4>
+<ul><li>Used Amion schedule data last updated <span class="message">$updated</span> (yyyy-mm-dd).</li>
+        <ul><li>If the schedule might have changed substantially since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</li></ul>
+<p>Conference Times:<br>
+    (El Nino calls Monday 0, Tuesday 1, etc...)<br>
+    Morning Conference:
+        <span class="message">$amStr</span><br>
+    Noon Conference:
+        <span class="message">$noonStr</span><br>
+    Email Mike if you need to change those.</p>
+    
+<p>Other Parameters:<br>
+    <span class="message">$message</span></p>
+    
+<p>To re-do any of those parameters, return to the <a href="http://pediatricly.com/cgi-bin/elNino/confForm.py">Conference Attendance Form</a>.</p></div>
+
+<hr>
+
+<div class="output" id="errorLog">
+<h4>Check for errors!</h4>
+    <p>Any residents with missing data are printed in the table below.</p>
+        <ul><li>This is normal for super-seniors (+ chiefs), but they should be filtered out of this list.
+            <ul><li>Tell Mike if super-seniors are in the table.</li></ul></li>
+            <li>If normal-schedule residents are listed here:
+                <ul><li>Most likely, they're on a new rotation. (Or an old rotation with a new name in Amion - to El Nino, "Purple1" and "purple 1" are completely different rotations.):</li>
+                    <ul><li>You'll need to define the weekly number of AM and noon conferences expected for this new rotation. Email those to Mike.</li></ul>
+                    <li>But, if that doesn't fix it, there may be a problem with how El Nino is reading their schedule.
+                        <ul><li>El Nino can only read full-week rotations. Rarely, residents may have shorter rotations esp in Block 1 or 13. Double check any of these manually.</li>
+                            <li>If none of those explain it, tell Mike.</li></ul></li></ul>                 </li></ul> 
+    <table>$errRotStr</table>
+</div>
+    
+<hr>
+
+<div class="output" id="outputLinks">
+<h3>OK, here are your data:</h3>
+<ul><li><a href="http://pediatricly.com/cgi-bin/elNino/confAttendOutPrinter.py" target="_blank">$csvOutFile</a>
+        <ul><li><strong>Contains the main data</strong>, resident attendance by block, in csv format.</li>
+            <li>After it loads in your browser, Right Click > Save As... > name it a .csv file and you can open it easily in Excel.</li>
+            <li>Then, copy/paste the data into the "PasteHere" tab of <a href="http://www.pediatricly.com/elNino/confAttendOutput.xlsx">confAttendOutput.xlsx</a>. The prettified data will update on the "Formatted" tab.</li></ul></li>
+        <li><a href="http://pediatricly.com/cgi-bin/elNino/confByWeekPrinter.py" target="_blank">$confByWeek</a>
+        <ul><li>View the current csv of <i>weekly</i> expected attendance by rotation that El Nino used.</li></ul>
+        </li></ul></div>
+
+<hr>
+    
+<div class="output" id="filesIn">
+<h4>Badge Log Files Used:</h4>
+    <p>This will accumulate every badge log csv file you've ever uploaded. This is by design - El Nino removes duplicates so you don't have to worry about clearing the log on your iPhone. El Nino automatically renames these files by the date uploaded. To remove old files (say, at start of year), email Mike.</p>
+    <span class="message"><table>$filesIn</table></span>
+<p>This this stored on the server as $filesInF.</p>
+
+    

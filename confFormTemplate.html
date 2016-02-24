@@ -1,6 +1,6 @@
 <h3 class="title">This El Nino program calculates conference attendance based on residents' schedules.</h3>
-<p class="intro">This program tallies attendance using resident schedules. <br>
-It does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate results and residents will be pissed. So, after any substantive schedule change, it is critical to update El Nino before using this program.<br>
+<p class="intro">This program tallies attendance using resident schedules. More detail, including on how to setup the badge scanning, is below.<br>
+This program does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate results and residents will be pissed. So, after any substantive schedule change, it is critical to update El Nino before using this program.<br>
 El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
 If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</p>
 
@@ -16,7 +16,7 @@ R2<input type="checkbox" name="classI" value="2">
 R3<input type="checkbox" name="classI" value="3"></span>
 <span class="default">(Defaults to all 3 classes if none are checked.)</span><br><br>
 
-<span class="prompt">The current list of allotments by rotation was uploaded $rotCashUpdate (yyyy-mm-dd). You can upload a new version here or leave blank to use that last version: <input type="file" name="confCSV1"></span><br>
+<span class="prompt">Upload up to 7 new badge log csv files here. The latest list of all uploaded files is below. El Nino is designed to store all your old files and throw out duplicates. You can leave this blank to use those previously uploaded files: <input type="file" name="confCSV1"></span><br>
 <span class="prompt">Here's a second: <input type="file" name="confCSV2"></span><br>
 <span class="prompt">Here's a third: <input type="file" name="confCSV3"></span><br>
 <span class="prompt">Here's a fourth: <input type="file" name="confCSV4"></span><br>
@@ -33,8 +33,17 @@ R3<input type="checkbox" name="classI" value="3"></span>
 
 
     <hr>
-    <div class="input" id="samples">
-    <h3>OLD - NEEDS TO BE REPLACED - What's the deal with this list of allotments by rotation?</h3>
+
+<div class="output" id="filesIn">
+<h4>Badge Log Files Used:</h4>
+    <p>This will accumulate every badge log csv file you've ever uploaded. This is by design - El Nino removes duplicates so you don't have to worry about clearing the log on your iPhone. El Nino automatically renames these files by the date uploaded. To remove old files (say, at start of year), email Mike.</p>
+    <span class="message"><table>$filesIn</table></span>
+<p>This this list stored on the server as <span class="message">$filesInF</span>.</p>
+
+
+
+<div class="input" id="samples">
+    <h3>How Do I Use El Nino Calculate Conference Attendance?</h3>
     <p>This is a simple spreadsheet (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv or comma-separated file</a>) uploaded by a chief or admin that El Nino uses to figure out how much money residents should receive based on their rotation. It looks like this:</p>
     <img src="http://www.pediatricly.com/images/elNino/sampleFoodCashByWeek.jpg" id="sampleFoodCash">
     <p>You need to follow that format exactly for it to work. Easiest is to modify <a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">the current list</a>, but you can also follow these criteria:
