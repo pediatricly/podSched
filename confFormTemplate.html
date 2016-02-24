@@ -1,0 +1,47 @@
+<h3 class="title">This El Nino program calculates conference attendance based on residents' schedules.</h3>
+<p class="intro">This program tallies attendance using resident schedules. <br>
+It does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate results and residents will be pissed. So, after any substantive schedule change, it is critical to update El Nino before using this program.<br>
+El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
+If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</p>
+
+<hr>
+<h3>Enter Your Parameters Here</h3>
+<div class="input" id="confForm">
+<form enctype="multipart/form-data" method="post" action="confAttendCGItest.py">
+<span class="prompt">First Block to Calculate: </span><input type="number" name="firstBlock" min="1" max="13"><span class="default">  Defaults to 1 if left blank.</span><br>
+<span class="prompt">Last Block to Calculate: </span><input type="number" name="lastBlock" min="1" max="13"><span class="default">  Defaults to 13 if left blank.</span><br><br>
+PGY Classes to Include:
+<span class="prompt">R1<input type="checkbox" name="classI" value="1">
+R2<input type="checkbox" name="classI" value="2">
+R3<input type="checkbox" name="classI" value="3"></span>
+<span class="default">(Defaults to all 3 classes if none are checked.)</span><br><br>
+
+<span class="prompt">The current list of allotments by rotation was uploaded $rotCashUpdate (yyyy-mm-dd). You can upload a new version here or leave blank to use that last version: <input type="file" name="confCSV1"></span><br>
+<span class="prompt">Here's a second: <input type="file" name="confCSV2"></span><br>
+<span class="prompt">Here's a third: <input type="file" name="confCSV3"></span><br>
+<span class="prompt">Here's a fourth: <input type="file" name="confCSV4"></span><br>
+<span class="prompt">Here's a fifth: <input type="file" name="confCSV5"></span><br>
+<span class="prompt">Here's a sixth: <input type="file" name="confCSV6"></span><br>
+<span class="prompt">Here's a seventh: <input type="file" name="confCSV7"></span><br>
+    <br>
+    <input type="submit" value="Submit"></form>
+    </div>
+
+
+
+
+
+
+    <hr>
+    <div class="input" id="samples">
+    <h3>OLD - NEEDS TO BE REPLACED - What's the deal with this list of allotments by rotation?</h3>
+    <p>This is a simple spreadsheet (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv or comma-separated file</a>) uploaded by a chief or admin that El Nino uses to figure out how much money residents should receive based on their rotation. It looks like this:</p>
+    <img src="http://www.pediatricly.com/images/elNino/sampleFoodCashByWeek.jpg" id="sampleFoodCash">
+    <p>You need to follow that format exactly for it to work. Easiest is to modify <a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">the current list</a>, but you can also follow these criteria:
+        <ol><li>It must be saved as a .csv file. (Excel etc can save as this format.) </li>
+            <li>It must have only 2 columns:
+                <ol><li>Rotation</li>
+                    <li>cashWk</li></ol></li>
+            <li>The rotation names in column A <b>need</b> to match those in Amion exactly. You can get <a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">the latest list in Amion from El Nino</a> (based on the last El Nino update).</li>
+            <li>The cash amounts in column B must be weekly and must be <b>numbers only</b>.</li></ol></p>
+    </div>
