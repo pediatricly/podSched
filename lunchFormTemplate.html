@@ -1,8 +1,10 @@
+<div class="lunchMoney">
 <h3 class="title">This El Nino program calculates allotments to resident meal cards based on their schedule.</h3>
 <p class="intro">This program tallies meal card allocations based on resident schedules. <br>
-It does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate allotments and residents will be pissed. So it is critical to update El Nino before using this program.<br>
-El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
-If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</p>
+It does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate allotments and residents will be pissed. So it is critical to update El Nino before using this program.</p>
+
+<p class="intro">El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
+If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update the schedule data.</p>
 
 <hr>
 <h4>Enter Your Parameters Here</h4>
@@ -28,8 +30,7 @@ R3<input type="checkbox" name="classI" value="3"></span>
         <ol><li><a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">Click here to view the current list</a>.</li>
             <li>In the window that opens, <b>Right click > Save as...</b></li>
             <li>Change the file extension from .py or .py.txt to <b>.csv</b></li>
-            <li>You can then open the file in Excel and make any changes.</li>
-            <li>Delete the blank row at the top before saving!</li></ol>
+            <li>You can then open the file in Excel and make any changes.</li></ol>
 <p>Whatever you do, follow these criteria:</p>
         <ol><li>It must be saved as a .csv file. (Excel etc can save as this format.) </li>
             <li>It must have only 2 columns:
@@ -43,11 +44,11 @@ R3<input type="checkbox" name="classI" value="3"></span>
 
 <div class="input" id="newYear">
     <h4>Special Case of Lunch Money in July</h4>
-        <p>El Nino literally reads the main block schedule from Amion by clicking the "Block" link on the <a href="http://amion.com/cgi-bin/ocs" target="_blank">Amion main page</a>. That block schedule changes to the new year sometime around July 1st. Until it does, El Nino cannot see the next year's schedule. The problem is that you will probably need to give residents some lunch money before Amion updates to the new year.</p>
+        <p>El Nino literally reads the main block schedule from Amion by clicking the "Block" link on the <a href="http://amion.com/cgi-bin/ocs" target="_blank">Amion main page</a>. That block schedule changes to the new academic year sometime around July 1st. Until it does, El Nino cannot see the next year's schedule and so lunchMoney will not work for the new year. The problem is that you will probably need to give residents some lunch money before Amion updates to the new year.</p>
         <p>I <b>recommend</b> you do this:
         <ul><li>Give everyone, especially the incoming interns, $100 in June.</li>
             <li>WAIT until Amion has updated to the new year. By late July, this should be done.</li>
             <li>Once Amion shows the new year by default, run Lunch Money.</li>
             <li>Then, just subtract that $100 from the allotment for each resident and everyone breaks even.</li>
             </ul></p>
-   
+   </div>

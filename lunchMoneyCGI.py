@@ -46,6 +46,7 @@ from allResStr import blockStops1
 from allResStr import updated
 from blockUtils import blockLookup
 from rotCashUpdate import rotCashUpdate
+from confAttendCGI import superSeniors
 #########################################################
 ### Define Globals
 ##########################################################
@@ -238,7 +239,7 @@ for rot in errRots:
     if rot != '' and rot != '-' and rot != '--':
         errRotStr += '<tr><td>' + rot + '</td></tr>'
 for res in errRes:
-    if res != '' and res != 'co' and res != 'u':
+    if res != '' and res != 'co' and res != 'u' and res not in superSeniors:
         errResStr += '<tr><td>' + res + '</td></tr>'
 if errResStr == '': errResStr += '<tr><td>None - hooray!</td></tr>'
 if errRotStr == '': errRotStr += '<tr><td>None - hooray!</td></tr>'

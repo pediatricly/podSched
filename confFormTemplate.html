@@ -1,4 +1,5 @@
-<h3 class="title">Calculates conference attendance based on residents' schedules.</h3>
+<div class="confAttend">
+    <h3 class="title">Calculates conference attendance based on residents' schedules.</h3>
 <p class="intro">This program tallies attendance using resident schedules. More detail, including on how to setup the badge scanning, is below.<br>
 This program does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate results and residents will be pissed. So, after any substantive schedule change, it is critical to update El Nino before using this program.<br>
 El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
@@ -36,7 +37,7 @@ R3<input type="checkbox" name="classI" value="3"></span>
     <p>This will accumulate every badge log csv file you've ever uploaded. This is by design - El Nino removes duplicates so you don't have to worry about clearing the log on your iPhone. El Nino automatically renames these files by the date uploaded. To remove old files (say, at start of year), email Mike.</p>
     <span class="message"><table>$filesIn</table></span>
 <p>This this list stored on the server as <span class="message">$filesInF</span>.</p>
-
+    </div>
 <hr>
 
 <div class="input" id="samples">
@@ -56,6 +57,7 @@ R3<input type="checkbox" name="classI" value="3"></span>
         <li>Upload your files here. It is no problem if you upload the same file multiple times.</li>
         <li>See instructions on the next page to paste the resulting data into a fancier spreadsheet for analysis.</li>
     </ol>
+    </div>
     
   <div class="input" id="schedChange">  
 <h4>Schedule Changes</h4>
@@ -64,4 +66,5 @@ R3<input type="checkbox" name="classI" value="3"></span>
     <p>That file needs to be updated for new rotations (or old rotations with new names) or changes to the conference schedule. Send updates to Mike and be sure to follow these rules:</p>
             <ul><li>The rotation names in column A <b>need</b> to match those in Amion exactly. You can get <a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">the latest list in Amion from El Nino</a> (based on the last El Nino update).</li>
             <li>The conference expectations amounts in columns B and C must be weekly and must be <b>numbers only</b>.</li></ul>
+    </div>
     </div>

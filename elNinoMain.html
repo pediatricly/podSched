@@ -1,5 +1,13 @@
 <h3 class="title">The El Nino Main Page</h2>
+
 <p class="intro">El Nino is a system of <a href="https://www.python.org/" target="_blank">Python</a> programs developed by <a href="http://lnkd.in/sCnSZw">Mike Scahill</a> in Jan-Feb 2016 to help with administrative tasks for the UCSF Pediatrics Residency. It turns the residency schedule from the Amion site into a machine readable format to perform its functions.</p>
+
+<p class="intro">Each application has its own detailed instructions. The general flow is:</p>
+<ol><li>The Amion schedule changes all the time. You need to check when El Nino last downloaded Amion data and <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">tell it to check for updates</a> if it has been a while.
+    <ul><li>This should involve nothing more than clicking 1 button - except once a year in July. Updater explains the details.</li></ul></li>
+    <li>With El Nino's data up to date, pick your application: <a href="http://pediatricly.com/cgi-bin/elNino/lunchMoneyForm.py">Lunch Money</a>, <a href="http://pediatricly.com/cgi-bin/elNino/meetingForm.py">Meeting Planner</a> or <a href="http://pediatricly.com/cgi-bin/elNino/confForm.py">Conference Attendance</a>.</li> 
+    <li>Give it your parameters. You may need to upload some new information especially when new rotations appear in the Amion schedule. El Nino can read the schedule but has no idea what it means.</li>
+    <li>El Nino returns your results, usually as a <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV file</a>.</li></ol>
 
 <p>The source code is open and freely available. Contact <a href="http://lnkd.in/sCnSZw">Mike</a> for further details.</p>
 

@@ -13,13 +13,17 @@
 
 <div class="output" id="blockSplits">
 <h3>Block 1 Split Dates</h3>
-    <p>El Nino can figure out most of the block schedule, but it needs you to set the "split dates" for block 1. You should only have to set this manually once a year in July.<br>
-    Split dates are the Mondays when second-half blocks (eg the SFX in "JEOP | SFX") start. Because block 1 rarely starts on a Monday, el Nino needs you to tell it when to split block 1 (for both the R1 and R2/3 schedules).<br>
+    <p><b>Please let the Chiefs ONLY do this section.<br>
+        It only needs to be used once a year in July but will break the system if done wrong.</b></p>
+    
+    <p>El Nino can figure out most of the block schedule, but it needs you to set the "split dates" for block 1. You should only have to set this manually <b>once a year in July</b>.<br>
+    Split dates are the Mondays when second-half blocks (eg the SFX in "JEOP | SFX") start. Because block 1 rarely starts on a Monday, el Nino needs you to tell it when to split block 1 (for both the R1 and R2/3 schedules).<br></p>
 
 <div class="input" id="blockSplitForm">
 <form method="get" action="blockParseCGI.py">
 <span class="prompt">Block 1 Split, R1: </span><input type="date" id="block1split1" name="block1split1" min="2015-07-01" max="2050-06-30"><span class="default">  Works best in Google Chrome. If your browser is showing a plain text entry box, you must enter the date as "YYYY-MM-DD". Currently set to $block1split1</span><br>
 <span class="prompt">Block 1 Split, R2/3s: </span><input type="date" id="block1split23" name="block1split23" min="2015-07-01" max="2050-06-30"><span class="default">  Works best in Google Chrome. If your browser is showing a plain text entry box, you must enter the date as "YYYY-MM-DD". Currently set to $block1split23</span><br><br>
-If those current dates are still accurate, leave this blank and simply hit Submit to update the database.</p></div>
+
+    <p><b>If those current dates are still accurate and/or you are not a Chief Resident, leave those boxes blank and simply hit Submit to update the database.</b></p></div>
 <input type="submit" value="Submit"></form>
     </div>

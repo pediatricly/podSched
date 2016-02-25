@@ -208,7 +208,20 @@ input[type="checkbox"]:checked + label {
     font-size: 14px;
 }
 
+.lunchMoney {
+    background-color: rgb(81, 97, 81);
+    padding: 5px;
+}
 
+.meetingPlanner {
+    background-color: rgb(80, 69, 90);
+    padding: 5px;
+}
+
+.confAttend {
+    background-color: rgb(78, 60, 15);
+    padding: 5px;
+}
 /*Footer Stuff*/
 
 footer {

@@ -7,5 +7,5 @@ import cgi
 import cgitb
 # cgitb.enable()
 print 'Content-Type: text/plain\r\n'
-fh = open('candidates.csv', 'rb')
+fh = open('confAttendOut.csv', 'rb')
 print fh.read()

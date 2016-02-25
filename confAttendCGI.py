@@ -40,6 +40,7 @@ errRots = []
 errRotStr = '<tr><th>Resident</th><th>Block</th><th>Rotation</th></tr>'
 errRotStrOrig = '<tr><th>Resident</th><th>Block</th><th>Rotation</th></tr>'
 filesIn = '<tr><th>CSV Filename</th></tr>'
+badgeErrs = '<tr><th>Date</th><th>Unrecognized Badges</th></tr>'
 # Used just 1, now set start times individually for every weekday. Uses the
 # Python date.weekday() function where Mon = 0, Fri = 4. These are assembled
 # into dicts of tupules of datetime objects in the loops below.
@@ -175,6 +176,9 @@ for filename in directory:
         fh.close()
         filesIn += '<tr><td>' + filename + '</td></tr>'
 
+#########################################################
+### Parse the CSVs, mostly for timestamps
+##########################################################
 for item in masterSet:
     timeStamp = item[0]
     split1 = timeStamp.split(' ')
@@ -329,7 +333,7 @@ blocks = [x for x in range(firstBlock, lastBlock+1)]
 #########################################################
 ### Build the data dict starting with the expected data
 ##########################################################
-# This loop just sets up the dict with $ = 0
+# This loop just sets up the dict with attendance = 0
 for res in allRes:
     resDict = {}
     for block in blocks:
@@ -340,6 +344,8 @@ for res in allRes:
         data[res] = resDict
 # print data
 ##########################################################
+### Then calculate expected attendance by rotation (near identical to lunchMoney)
+##########################################################
 for pgyYr in classes:
     if pgyYr == 1:
         starts = blockStarts1
@@ -349,13 +355,37 @@ for pgyYr in classes:
         stops = blockStops23
 
     day1 = DT.datetime.strptime(starts[firstBlock], '%Y-%m-%d')
-    firstMon = day1 + DT.timedelta(days=(7-day1.weekday())) - increment
+    firstMon = day1 + DT.timedelta(days=(7-day1.weekday()))# - increment
     endDay = DT.datetime.strptime(stops[lastBlock], '%Y-%m-%d')
 
     for res in allRes:
         if res != 'co' and res != 'u':
             if allRes[res]['pgy'] == pgyYr:
-                tracker = firstMon
+                if day1.weekday() != 0:
+                # This if branch adjusts for ff day1 is not Monday ->
+                # grab that first partial week as it if were whole and calculate >
+                # Then increment tracker and proceed.
+                # Without this, every R2/3 has this odd missing lookup when it
+                # tries to see what rotation they were on in June
+                    tupule = blockLookup(day1, res, allRes)
+                    block = tupule[0]
+                    rotation = tupule[1]
+                    try:
+                        amWk = wkData[rotation]['amWk']
+                        noonWk = wkData[rotation]['noonWk']
+
+                    except:
+                        amWk = 0
+                        noonWk = 0
+                        thruple = (res, tupule)
+                        errRots.append(thruple)
+                    try:
+                        data[res][block]['expected']['am'] += amWk
+                        data[res][block]['expected']['noon'] += noonWk
+                    except: pass
+                    tracker = firstMon
+                else: #If day1 is Monday, just roll through the normal loop
+                    tracker = day1
                 # tracker = tracker + DT.timedelta(7)
                 while (tracker < endDay):
                     tupule = blockLookup(tracker, res, allRes)
@@ -406,18 +436,27 @@ for event in cleanDict:
     else:
         blockI = cleanDict[event]['block']
         confI = cleanDict[event]['conf']
-        if blockI == '' or confI == 'unknown':
-            errList.append(cleanDict[event])
+        if blockI == '' or confI == 'unknown': pass
+            # errList.append(cleanDict[event])
+            # This commented line above used to put these in errList, but most of
+            # these seem to be chiefs and superseniors testing badges, so I don't
+            # know if it's useful. Leaving it off for production as of 24Feb16.
         else:
-            minLateI = cleanDict[event]['minLate']
-            if confI == 'am':
-                data[AmName][blockI]['actual']['am'] += 1
-                data[AmName][blockI]['actual']['amLate'] += minLateI
-            elif confI == 'noon':
-                data[AmName][blockI]['actual']['noon'] += 1
-                data[AmName][blockI]['actual']['noonLate'] += minLateI
+            # This try, except block is crucial to prevent errors. If you set
+            # block range small but have events outside that range, they produce
+            # key errors here.
+            try:
+                minLateI = cleanDict[event]['minLate']
+                if confI == 'am':
+                    data[AmName][blockI]['actual']['am'] += 1
+                    data[AmName][blockI]['actual']['amLate'] += minLateI
+                elif confI == 'noon':
+                    data[AmName][blockI]['actual']['noon'] += 1
+                    data[AmName][blockI]['actual']['noonLate'] += minLateI
+            except KeyError: pass
 # print data['Ainsworth-A']
 
+# Calculate % actual out expected. Easier here than in Excel.
 for res in data:
     for block in data[res]:
         try:
@@ -469,23 +508,27 @@ with open(filesInF, 'wb') as filesInFH:
     filesInFH.write('\n')
 # print data
 #########################################################
-### Write the output data to HTML
+### Convert the output data to HTML
 ##########################################################
 for err in errRots:
     errRes = err[0]; errTupule = err[1]
     if errRes not in superSeniors:
         errBlock = errTupule[0]; errRot = errTupule[1]
-        errRotStr += '<tr><td>' + errRes + '</td><td>' + str(errBlock) + '</td><td>' + errRot + '</td><td></tr>'
+        errRotStr += '<tr><td>' + errRes + '</td><td>' + str(errBlock) + '</td><td>' + errRot + '</td></tr>'
 if errRotStr == errRotStrOrig:
-    errRotStr += '<tr><td>' + 'No errors!' + '</td><td>' + '' + '</td><td>' + 'Boom!' + '</td><td></tr>'
+    errRotStr += '<tr><td>' + 'No errors!' + '</td><td>' + '' + '</td><td>' + 'Boom!' + '</td></tr>'
+for err in errList:
+    dateJ = err['date']
+    dateJ = dateJ.isoformat()
+    badgeErrs +=  '<tr><td>' + dateJ + '   |</td><td>' + str(err['badge']) + '</td></tr>'
 
 try:
-    ################################################################################
-    ### Output to html (or print to stdout)
-    ################################################################################
+################################################################################
+### Output to html (or print to stdout)
+################################################################################
     templateVars = dict(message=message, csvOutFile=csvOutFile, filesInF=filesInF,
                         confByWeek=confByWeek, updated=updated,
-                        amStr=amStr, noonStr=noonStr,
+                        amStr=amStr, noonStr=noonStr, badgeErrs=badgeErrs,
                         classesStr=classesStr, firstBlock=str(firstBlock),
                         lastBlock=str(lastBlock), filesIn=filesIn,
                         errRotStr=errRotStr)
