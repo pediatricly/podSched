@@ -46,7 +46,6 @@ from allResStr import blockStops1
 from allResStr import updated
 from blockUtils import blockLookup
 from rotCashUpdate import rotCashUpdate
-from confAttendCGI import superSeniors
 #########################################################
 ### Define Globals
 ##########################################################
@@ -68,6 +67,8 @@ title = 'Lunch Money'
 subtitle = 'Results Form'
 frameTemplate = 'elNinoFrame.html'
 htmlTemplate = 'lunchMoneyTemplate.html'
+superSeniors = ['Wasio-L', 'Haluck,Ning', 'Scahill-M', 'Thein-K', 'Bares-A',
+                'Sznewajs,Aimee']
 errRots = set()
 errRes = set()
 ###############################################################################
