@@ -69,7 +69,7 @@ superSeniors = ['Wasio-L', 'Haluck,Ning', 'Scahill-M', 'Thein-K', 'Bares-A',
 import cgi
 import cgitb
 print 'Content-Type: text/html\r\n\r\n'
-cgitb.enable()
+# cgitb.enable()
 form = cgi.FieldStorage() # instantiate only once!
 
 # try:
