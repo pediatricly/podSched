@@ -178,7 +178,7 @@ input[type="checkbox"]:checked + label {
 
 /*Individual Stuff*/
 
-#sampleFoodCash {
+#sampleFoodCash, #sampleConfWeek {
     width: 50%;
     max-width: 300px;
 }

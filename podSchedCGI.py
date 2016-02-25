@@ -281,7 +281,6 @@ while tracker < endDate:
     htmlI = reqI.content
     nextLink = re.findall(nextDay, htmlI, re.M)[0] # Find the next day link again for iteration
     if tracker < startDate:
-        print tracker
         tracker = tracker + increment # Don't lose. Tracks date, break while loop.
         continue
     else:

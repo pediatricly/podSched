@@ -5,7 +5,7 @@ El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
 If the schedule might have changed since then, go to <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino Updater</a> to update El Nino's schedule data.</p>
 
 <hr>
-<h3>Enter Your Parameters Here</h3>
+<h4>Enter Your Parameters Here</h4>
 <div class="input" id="lunchForm">
 <form enctype="multipart/form-data" method="post" action="lunchMoneyCGI.py">
 <span class="prompt">First Block to Calculate: </span><input type="number" name="firstBlock" min="1" max="13"><span class="default">  Defaults to 1 if left blank.</span><br>
@@ -21,14 +21,33 @@ R3<input type="checkbox" name="classI" value="3"></span>
 
     <hr>
     <div class="input" id="samples">
-    <h3>What's the deal with this list of allotments by rotation?</h3>
+    <h4>What's the deal with this list of allotments by rotation?</h4>
     <p>This is a simple spreadsheet (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv or comma-separated file</a>) uploaded by a chief or admin that El Nino uses to figure out how much money residents should receive based on their rotation. It looks like this:</p>
     <img src="http://www.pediatricly.com/images/elNino/sampleFoodCashByWeek.jpg" id="sampleFoodCash">
-    <p>You need to follow that format exactly for it to work. Easiest is to modify <a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">the current list</a>, but you can also follow these criteria:
+    <p>You need to follow that format exactly for it to work. Easiest is to modify the current list:
+        <ol><li><a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">Click here to view the current list</a>.</li>
+            <li>In the window that opens, <b>Right click > Save as...</b></li>
+            <li>Change the file extension from .py or .py.txt to <b>.csv</b></li>
+            <li>You can then open the file in Excel and make any changes.</li>
+            <li>Delete the blank row at the top before saving!</li></ol>
+<p>Whatever you do, follow these criteria:</p>
         <ol><li>It must be saved as a .csv file. (Excel etc can save as this format.) </li>
             <li>It must have only 2 columns:
                 <ol><li>Rotation</li>
                     <li>cashWk</li></ol></li>
             <li>The rotation names in column A <b>need</b> to match those in Amion exactly. You can get <a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">the latest list in Amion from El Nino</a> (based on the last El Nino update).</li>
-            <li>The cash amounts in column B must be weekly and must be <b>numbers only</b>.</li></ol></p>
+            <li>The cash amounts in column B must be weekly and must be <b>numbers only</b> - do not include $, /, etc.</li></ol></p>
     </div>
+ 
+<hr>
+
+<div class="input" id="newYear">
+    <h4>Special Case of Lunch Money in July</h4>
+        <p>El Nino literally reads the main block schedule from Amion by clicking the "Block" link on the <a href="http://amion.com/cgi-bin/ocs" target="_blank">Amion main page</a>. That block schedule changes to the new year sometime around July 1st. Until it does, El Nino cannot see the next year's schedule. The problem is that you will probably need to give residents some lunch money before Amion updates to the new year.</p>
+        <p>I <b>recommend</b> you do this:
+        <ul><li>Give everyone, especially the incoming interns, $100 in June.</li>
+            <li>WAIT until Amion has updated to the new year. By late July, this should be done.</li>
+            <li>Once Amion shows the new year by default, run Lunch Money.</li>
+            <li>Then, just subtract that $100 from the allotment for each resident and everyone breaks even.</li>
+            </ul></p>
+   

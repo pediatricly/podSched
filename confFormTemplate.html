@@ -1,4 +1,4 @@
-<h3 class="title">This El Nino program calculates conference attendance based on residents' schedules.</h3>
+<h3 class="title">Calculates conference attendance based on residents' schedules.</h3>
 <p class="intro">This program tallies attendance using resident schedules. More detail, including on how to setup the badge scanning, is below.<br>
 This program does NOT read the Amion schedule directly! It uses data saved by the <a href="http://pediatricly.com/cgi-bin/elNino/updater.py">El Nino "Updater"</a> (aka blockParse). Obviously, if those data are not current, you will get inaccurate results and residents will be pissed. So, after any substantive schedule change, it is critical to update El Nino before using this program.<br>
 El Nino was last updated on <strong>$updated</strong> (yyyy-mm-dd).<br>
@@ -7,7 +7,7 @@ If the schedule might have changed since then, go to <a href="http://pediatricly
 <hr>
 <h3>Enter Your Parameters Here</h3>
 <div class="input" id="confForm">
-<form enctype="multipart/form-data" method="post" action="confAttendCGItest.py">
+<form enctype="multipart/form-data" method="post" action="confAttendCGI.py">
 <span class="prompt">First Block to Calculate: </span><input type="number" name="firstBlock" min="1" max="13"><span class="default">  Defaults to 1 if left blank.</span><br>
 <span class="prompt">Last Block to Calculate: </span><input type="number" name="lastBlock" min="1" max="13"><span class="default">  Defaults to 13 if left blank.</span><br><br>
 PGY Classes to Include:
@@ -16,20 +16,17 @@ R2<input type="checkbox" name="classI" value="2">
 R3<input type="checkbox" name="classI" value="3"></span>
 <span class="default">(Defaults to all 3 classes if none are checked.)</span><br><br>
 
-<span class="prompt">Upload up to 7 new badge log csv files here. The latest list of all uploaded files is below. El Nino is designed to store all your old files and throw out duplicates. You can leave this blank to use those previously uploaded files: <input type="file" name="confCSV1"></span><br>
-<span class="prompt">Here's a second: <input type="file" name="confCSV2"></span><br>
-<span class="prompt">Here's a third: <input type="file" name="confCSV3"></span><br>
-<span class="prompt">Here's a fourth: <input type="file" name="confCSV4"></span><br>
-<span class="prompt">Here's a fifth: <input type="file" name="confCSV5"></span><br>
-<span class="prompt">Here's a sixth: <input type="file" name="confCSV6"></span><br>
-<span class="prompt">Here's a seventh: <input type="file" name="confCSV7"></span><br>
+<span class="prompt">Upload up to 7 new badge log csv files here. The latest list of all uploaded files is below. El Nino is designed to store all your old files and throw out duplicates. You can leave this blank to use those previously uploaded files.<br>
+    <ol><li><input type="file" name="confCSV1"></span><br>
+        <li><span class="prompt"><input type="file" name="confCSV2"></span></li>
+        <li><span class="prompt"><input type="file" name="confCSV3"></span></li>
+        <li><span class="prompt"><input type="file" name="confCSV4"></span></li>
+        <li><span class="prompt"><input type="file" name="confCSV5"></span></li>
+        <li><span class="prompt"><input type="file" name="confCSV6"></span></li>
+        <li><span class="prompt"><input type="file" name="confCSV7"></span></li></ol>
     <br>
     <input type="submit" value="Submit"></form>
     </div>
-
-
-
-
 
 
     <hr>
@@ -40,17 +37,31 @@ R3<input type="checkbox" name="classI" value="3"></span>
     <span class="message"><table>$filesIn</table></span>
 <p>This this list stored on the server as <span class="message">$filesInF</span>.</p>
 
-
+<hr>
 
 <div class="input" id="samples">
     <h3>How Do I Use El Nino Calculate Conference Attendance?</h3>
-    <p>This is a simple spreadsheet (<a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv or comma-separated file</a>) uploaded by a chief or admin that El Nino uses to figure out how much money residents should receive based on their rotation. It looks like this:</p>
-    <img src="http://www.pediatricly.com/images/elNino/sampleFoodCashByWeek.jpg" id="sampleFoodCash">
-    <p>You need to follow that format exactly for it to work. Easiest is to modify <a href="http://pediatricly.com/cgi-bin/elNino/foodCashByWeekPrinter.py" target="_blank">the current list</a>, but you can also follow these criteria:
-        <ol><li>It must be saved as a .csv file. (Excel etc can save as this format.) </li>
-            <li>It must have only 2 columns:
-                <ol><li>Rotation</li>
-                    <li>cashWk</li></ol></li>
-            <li>The rotation names in column A <b>need</b> to match those in Amion exactly. You can get <a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">the latest list in Amion from El Nino</a> (based on the last El Nino update).</li>
-            <li>The cash amounts in column B must be weekly and must be <b>numbers only</b>.</li></ol></p>
+    <ol><li>When new residents arrive, email weid _at_ police _dot_ ucsf _dot_ edu with a list of names, pgy-years and employee ID numbers.
+        <ul><li>Marcela can export this easily from the peds$ database.</li>
+            <li>Ask WeID for the "library" badge numbers. These are the numbers on the <i>front</i> of UCSF badges above the barcode. (The barcode <i>is</i> that number in binary.)</li></ul></li>
+        <li>Send that file to Mike to upload to El Nino.</li>
+        <li>Use the <a href="https://itunes.apple.com/us/app/badgescan/id895991597?mt=8" target="_blank">BadgeScan iPhone app </a>(free) to scan the front barcode on resident's badges.
+        <ul><li>All you need to do when scanning is to look that the long number that appears in the app matches the badge. We've had quite a few where it misses a few digits and that can't be recovered.</li>
+            <li>It is fine to scan the same badge multiple times. El Nino throws out any duplicates.</li>
+            <li>The app stores your the entire history of scans in a badge log file with an option to email that file.</li></ul></li>
+        <li>Whenever you want, email that file to yourself and save it.
+        <ul><li>There is no need to "clear history" in the app (El Nino throws out duplicates), but you can if you want once you email that file.</li>
+            <li>You can use as many different phones as you want. You could, e.g., ask all the ward seniors to scan badges then send you the data.</li>
+            <li>The app stores a date and time stamp from each scan, so you can send the files in any order.</li></ul></li>
+        <li>Upload your files here. It is no problem if you upload the same file multiple times.</li>
+        <li>See instructions on the next page to paste the resulting data into a fancier spreadsheet for analysis.</li>
+    </ol>
+    
+  <div class="input" id="schedChange">  
+<h4>Schedule Changes</h4>
+      <p>El Nino uses a <a href="https://en.wikipedia.org/wiki/Comma-separated_values">csv or comma-separated file</a> to figure out how many conferences residents should attend based on their rotation each week. <a href="http://pediatricly.com/cgi-bin/elNino/confByWeekPrinter.py" target="_blank">The current list is here</a>, and it looks like this:</p>
+    <img src="http://www.pediatricly.com/images/elNino/sampleConfByWeek.jpg" id="sampleConfWeek">
+    <p>That file needs to be updated for new rotations (or old rotations with new names) or changes to the conference schedule. Send updates to Mike and be sure to follow these rules:</p>
+            <ul><li>The rotation names in column A <b>need</b> to match those in Amion exactly. You can get <a href="http://pediatricly.com/cgi-bin/elNino/allRotsPrinter.py" target="_blank">the latest list in Amion from El Nino</a> (based on the last El Nino update).</li>
+            <li>The conference expectations amounts in columns B and C must be weekly and must be <b>numbers only</b>.</li></ul>
     </div>
