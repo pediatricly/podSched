@@ -191,9 +191,15 @@ def amionLookup(AmName, htmli, resDict):
 
     # This section re finds the date from the Amion html then parses it into a
     # Python date so it sorts/compares reliably.
-    dTar = '\w\w\w, \w\w\w \d+, \d\d\d\d'
-    dStr = re.findall(dTar, htmli, re.M)
-    dParts = str(dStr[0]).split()
+    try:
+        # Amion uses 3 or 4 letter month abbreviations
+        dTar = '\w\w\w, \w\w\w \d+, \d\d\d\d'
+        dStr = re.findall(dTar, htmli, re.M)
+        dParts = str(dStr[0]).split()
+    except:
+        dTar = '\w\w\w, \w\w\w\w \d+, \d\d\d\d'
+        dStr = re.findall(dTar, htmli, re.M)
+        dParts = str(dStr[0]).split()
     dPartsClean = []
     for part in dParts:
         out = part.translate(string.maketrans("",""), string.punctuation)
@@ -201,6 +207,7 @@ def amionLookup(AmName, htmli, resDict):
         except: pass
         dPartsClean.append(out)
     monLetters = dPartsClean[1]
+    if monLetters == 'June': monLetters = 'Jun'
     pyDate = DT.date(dPartsClean[3], DT.datetime.strptime(monLetters, '%b').month,
                     dPartsClean[2])
     isoDate = pyDate.isoformat()
@@ -276,6 +283,7 @@ nextLink = re.findall(nextDay, html, re.M)[0]
 ### Loop through Amion lookups day-by-day from tomorrow till endDate
 #################################################################################
 while tracker < endDate:
+    # print tracker
     # Skip this loop if before startDate
     reqI = requests.get(baseUrl + nextLink)
     htmlI = reqI.content
