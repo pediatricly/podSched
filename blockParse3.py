@@ -1,4 +1,5 @@
 #! /usr/bin/python26
+print 'Content-Type: text/html\r\n\r\n'
 
 '''
 Marks:
@@ -61,15 +62,16 @@ from string import Template
 # Import the last saved split dates
 from allResStr import block1split1
 from allResStr import block1split23
+block1split1 = '2015-07-06'
+block1split23 = '2015-07-13'
 # import json
 ################################################################################
 ### CGI Setup
 ################################################################################
-'''
 import cgi
 import cgitb
-print 'Content-Type: text/html\r\n\r\n'
-cgitb.enable()
+"""
+# cgitb.enable()
 form = cgi.FieldStorage() # instantiate only once!
 
 try:
@@ -90,17 +92,25 @@ try:
     block1split23 = block1split23.date()
 except:
     print '<h1>Whoa! Something went wrong with the block1 split date entry!</h1>'
-    print '<h1>If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(</h1>'
-'''
+    print '''
+    <p>If you are seeing this message, please double check any dates you entered.
+    <ul><li>Some browsers, eg Google Chrome, should have shown you a special entry box for dates.</li>
+        <li>If your browser, eg Firefox, just had a text box, you must enter the date as YYYY-MM-DD.</li>
+        <li>If you enter the wrong year, or the next year's data before Amion defaults to next year, it will produce an error.</li>
+        <li>If you still get this error after fixing the dates you entered, contact Mike. :(</li></ul>'''
 # Specifcy the block 1 split manually because the computer may guess wrong
 # block1split1 = DT.date(2015, 7, 6)
 # block1split23 = DT.date(2015, 7, 13)
+"""
+
 
 # Un-comment these if turning off CGI to parse imported blockSplits
+# '''
 block1split1= DT.datetime.strptime(block1split1, "%Y-%m-%d")
 block1split23= DT.datetime.strptime(block1split23, "%Y-%m-%d")
 block1split1 = block1split1.date()
 block1split23 = block1split23.date()
+# '''
 ################################################################################
 ### Globals & Setup
 ################################################################################
@@ -112,6 +122,11 @@ except: version = 'blockParseCGI.py'
 urlStub = "http://amion.com/cgi-bin/ocs"
 payload = {'login' : 'ucsfpeds'}
 skills = {'2': '', '3': '', '4':''}
+thisYr = DT.date.today().year
+thisMonth = DT.date.today().month
+if thisMonth < 7: schedYr = thisYr - 1
+else: schedYr = thisYr
+SyrParam = 'Syr=' + str(schedYr)
 
 # Setup output pieces
 outfile = 'allResStr.py'
@@ -180,43 +195,54 @@ elif len(nameSet) == 1:
 else: print "whoa - regex found nothing"
 '''
 #################################################################################
-def AmionBlockScraper(urlStub, load, skillsDict):
+def AmionBlockScraper(urlStub, load, skillsDict, YrParam):
     # First, load the main Amion landing page.
     message = ''
     f = 0
-    try:
-        r = requests.post(urlStub, data=load)
-        html = r.text # This is outputting the html of the actual schedule landing page
-        filestub = ''
+    # try:
+    r = requests.post(urlStub, data=load)
+    html = r.text # This is outputting the html of the actual schedule landing page
+    filestub = ''
 
-        soup1 = bs(html)
-        atags = soup1.find_all('a')
-        for tag in atags:
-            if tag.string == 'Block':
-                b = tag['href']
-                b = b.encode('ascii', 'ignore')
-                fileStub = b.split('?')[1]
-                fileStub = '?' + fileStub
+    soup1 = bs(html)
+    atags = soup1.find_all('a')
+    for tag in atags:
+        if tag.string == 'Block':
+            b = tag['href']
+            b = b.encode('ascii', 'ignore')
+            fileStub = b.split('?')[1]
+            params  = fileStub.split('&')
+            for param in params:
+                if param[:4] == 'File': FileParam = param
+                elif param[0:4] == 'Page': PageParam = param
+                elif param[0:4] == 'Fsiz': FsParam = param
+                elif param[0:4] == 'Sbci': SbcParam = param
+                else: pass
 
-        # Use that filename to construct the links to the class block schedule pages.
-        # Those links vary only by the skill parameter, hence this loop.
-        # The html that returns is stored as values in the skillsDict.
-        for skill in skillsDict:
-            htmlI = ''
-            # load['Skill'] = str(skill)
-            # As above, I initially used urlencode instead of string concatenation,
-            # but Amion expects the query string in this specific order.
-            url = urlStub + fileStub + '&Skill=' + skill
-            rI = requests.post(url)
-            htmlI = rI.text
-            skillsDict[skill] = htmlI
 
-        # skillsDict = {'2':'<block page html>...', '3':'<html...>',..}
-    except:
-        e = sys.exc_info()[0]
-        message = 'Whoa! Something went wrong with the Amion scraper. This is bad.<br>'
-        message += 'Error: %s' % e
-        f = 1
+            fileStub = '?' + FileParam
+
+    # Use that filename to construct the links to the class block schedule pages.
+    # Those links vary only by the skill parameter, hence this loop.
+    # The html that returns is stored as values in the skillsDict.
+    for skill in skillsDict:
+        htmlI = ''
+        # load['Skill'] = str(skill)
+        # As above, I initially used urlencode instead of string concatenation,
+        # but Amion expects the query string in this specific order.
+        url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&' + SbcParam
+        # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&Hili=-1&' + SbcParam
+        rI = requests.post(url)
+        htmlI = rI.text
+        skillsDict[skill] = htmlI
+
+
+    # skillsDict = {'2':'<block page html>...', '3':'<html...>',..}
+    # except:
+        # e = sys.exc_info()[0]
+        # message = 'Whoa! Something went wrong with the Amion scraper. This is bad.<br>'
+        # message += 'Error: %s' % e
+        # f = 1
     return (skillsDict, message, f)
 
 #################################################################################
@@ -534,7 +560,7 @@ def cellListParser(rowListI):
 #################################################################################
 # This scrapes Amion & returns dict whose values are the html of the block
 # schedules
-skillsOut = AmionBlockScraper(urlStub, payload, skills)
+skillsOut = AmionBlockScraper(urlStub, payload, skills, SyrParam)
 skills = skillsOut[0]
 errMessage += skillsOut[1]
 fatal += skillsOut[2]
@@ -554,7 +580,6 @@ for skill in skills:
 #################################################################################
 # Find the years from the Amion block page
     html = skills[skill]
-    # print html
     years = re.search(yearTar, html, re.I)
     fallYr = int(years.group(1))
     springYr = int(years.group(2))

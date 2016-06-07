@@ -1,4 +1,5 @@
 #! /usr/bin/python26
+print 'Content-Type: text/html\r\n\r\n'
 
 '''
 Marks:
@@ -67,7 +68,6 @@ from allResStr import block1split23
 ################################################################################
 import cgi
 import cgitb
-print 'Content-Type: text/html\r\n\r\n'
 # cgitb.enable()
 form = cgi.FieldStorage() # instantiate only once!
 
@@ -117,6 +117,15 @@ except: version = 'blockParseCGI.py'
 urlStub = "http://amion.com/cgi-bin/ocs"
 payload = {'login' : 'ucsfpeds'}
 skills = {'2': '', '3': '', '4':''}
+
+# Found in June '16 that Amion changes subtly once the new intern schedule gets
+# uploaded in early June. This section gets the current academic year (fall) to
+# pass into the url in AmionScraper
+thisYr = DT.date.today().year
+thisMonth = DT.date.today().month
+if thisMonth < 7: schedYr = thisYr - 1
+else: schedYr = thisYr
+SyrParam = 'Syr=' + str(schedYr)
 
 # Setup output pieces
 outfile = 'allResStr.py'
@@ -185,7 +194,7 @@ elif len(nameSet) == 1:
 else: print "whoa - regex found nothing"
 '''
 #################################################################################
-def AmionBlockScraper(urlStub, load, skillsDict):
+def AmionBlockScraper(urlStub, load, skillsDict, YrParam):
     # First, load the main Amion landing page.
     message = ''
     f = 0
@@ -201,7 +210,17 @@ def AmionBlockScraper(urlStub, load, skillsDict):
                 b = tag['href']
                 b = b.encode('ascii', 'ignore')
                 fileStub = b.split('?')[1]
-                fileStub = '?' + fileStub
+                # Updated in June  '16, this allows construction of the url with
+                # the year 'Syr' parameter
+                params  = fileStub.split('&')
+                for param in params:
+                    if param[:4] == 'File': FileParam = param
+                    elif param[0:4] == 'Page': PageParam = param
+                    elif param[0:4] == 'Fsiz': FsParam = param
+                    elif param[0:4] == 'Sbci': SbcParam = param
+                    else: pass
+
+                fileStub = '?' + FileParam
 
         # Use that filename to construct the links to the class block schedule pages.
         # Those links vary only by the skill parameter, hence this loop.
@@ -211,14 +230,18 @@ def AmionBlockScraper(urlStub, load, skillsDict):
             # load['Skill'] = str(skill)
             # As above, I initially used urlencode instead of string concatenation,
             # but Amion expects the query string in this specific order.
-            url = urlStub + fileStub + '&Skill=' + skill
+            url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&' + SbcParam
+            # The line below gets a different look to the page with that extra
+            # parameter Hili, not sure what it does but seems not necessary
+            # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&Hili=-1&' + SbcParam
             rI = requests.post(url)
             htmlI = rI.text
             skillsDict[skill] = htmlI
 
+
         # skillsDict = {'2':'<block page html>...', '3':'<html...>',..}
     except:
-        e = sys.exc_info()[0]
+        e = str(sys.exc_info()[0])
         message = 'Whoa! Something went wrong with the Amion scraper. This is bad.<br>'
         message += 'Error: %s' % e
         f = 1
@@ -268,7 +291,7 @@ def rowParser(seList):
                 rowList.append(newList2)
         # print 'rowList: ' + str(rowList) + '<br>'
     except:
-        e = sys.exc_info()
+        e = str(sys.exc_info()[0])
         message = 'Whoa! Something went wrong with the rowParser function.<br>'
         message += 'Error: %s' % e
         f = 1
@@ -527,7 +550,7 @@ def cellListParser(rowListI):
 # With all those adjustments done, re-sort the schedule list by start Dates
         sortSched = sorted(schedule, key=lambda k: k['startDate'])
     except:
-        e = sys.exc_info()
+        e = str(sys.exc_info()[0])
         message = 'Whoa! Something went wrong with the main parsing function that reads the Amion blocks.<br>'
         message += 'If you are seeing this message, please double check any dates you entered, the output summary below (resident names, etc) and try again. If you still get this error, contact Mike. :(<br>'
         message += 'Error: %s' % e
@@ -539,7 +562,7 @@ def cellListParser(rowListI):
 #################################################################################
 # This scrapes Amion & returns dict whose values are the html of the block
 # schedules
-skillsOut = AmionBlockScraper(urlStub, payload, skills)
+skillsOut = AmionBlockScraper(urlStub, payload, skills, SyrParam)
 skills = skillsOut[0]
 errMessage += skillsOut[1]
 fatal += skillsOut[2]
@@ -801,7 +824,7 @@ try:
         errMessage += 'There was a critical error before output. allResStr was not modified.<br>'
 except:
     errMessage += 'Whoa! Something went wrong with the file output.<br>'
-    e = sys.exc_info()
+    e = str(sys.exc_info()[0])
     errMessage += 'Error: %s' % e
 
 ################################################################################

@@ -3,7 +3,6 @@
 from allResStr import updated
 from string import Template
 from rotCashUpdate import rotCashUpdate
-from allResStr import updated
 ################################################################################
 ### CGI Setup
 ################################################################################
