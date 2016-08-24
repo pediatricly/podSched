@@ -1,4 +1,4 @@
-from allResStr import allRes
+from allResStr1 import allRes
 
 for res in allRes:
     print res + ':'
