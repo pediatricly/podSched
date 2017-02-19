@@ -1,5 +1,5 @@
 #! /usr/bin/python26
-print 'Content-Type: text/html\r\n\r\n'
+# print 'Content-Type: text/html\r\n\r\n'
 
 '''
 Marks:
@@ -68,44 +68,46 @@ from allResStr import block1split23
 ################################################################################
 import cgi
 import cgitb
-cgitb.enable()
+# cgitb.enable()
 form = cgi.FieldStorage() # instantiate only once!
 
-try:
+# try:
     # Get the split dates from CGI, default to previous if none entered
-    block1split1 = form.getfirst('block1split1', block1split1)
-    block1split23 = form.getfirst('block1split23', block1split23)
-    # Avoid script injection escaping the user input
-    block1split1= cgi.escape(block1split1)
-    block1split23= cgi.escape(block1split23)
-    # HTML form brings the whole ISO date format. This strips to just the date.
-    block1split1 = block1split1[:10]
-    block1split23 = block1split23[:10]
-    # Convert to dateime object
-    block1split1= DT.datetime.strptime(block1split1, "%Y-%m-%d")
-    block1split23= DT.datetime.strptime(block1split23, "%Y-%m-%d")
-    # Convert from datetime to date
-    block1split1 = block1split1.date()
-    block1split23 = block1split23.date()
-except:
-    print '<h1>Whoa! Something went wrong with the block1 split date entry!</h1>'
-    print '''
-    <p>If you are seeing this message, please double check any dates you entered.
-    <ul><li>Some browsers, eg Google Chrome, should have shown you a special entry box for dates.</li>
-        <li>If your browser, eg Firefox, just had a text box, you must enter the date as YYYY-MM-DD.</li>
-        <li>If you enter the wrong year, or the next year's data before Amion defaults to next year, it will produce an error.</li>
-        <li>If you still get this error after fixing the dates you entered, contact Mike. :(</li></ul>'''
-# Specifcy the block 1 split manually because the computer may guess wrong
+'''
+block1split1 = form.getfirst('block1split1', block1split1)
+block1split23 = form.getfirst('block1split23', block1split23)
+# Avoid script injection escaping the user input
+block1split1= cgi.escape(block1split1)
+block1split23= cgi.escape(block1split23)
+# HTML form brings the whole ISO date format. This strips to just the date.
+block1split1 = block1split1[:10]
+block1split23 = block1split23[:10]
+# Convert to dateime object
+block1split1= DT.datetime.strptime(block1split1, "%Y-%m-%d")
+block1split23= DT.datetime.strptime(block1split23, "%Y-%m-%d")
+# Convert from datetime to date
+block1split1 = block1split1.date()
+block1split23 = block1split23.date()
+'''
+# except:
+    # print '<h1>Whoa! Something went wrong with the block1 split date entry!</h1>'
+    # print '''
+    # <p>If you are seeing this message, please double check any dates you entered.
+    # <ul><li>Some browsers, eg Google Chrome, should have shown you a special entry box for dates.</li>
+        # <li>If your browser, eg Firefox, just had a text box, you must enter the date as YYYY-MM-DD.</li>
+        # <li>If you enter the wrong year, or the next year's data before Amion defaults to next year, it will produce an error.</li>
+        # <li>If you still get this error after fixing the dates you entered, contact Mike. :(</li></ul>'''
+                                                                                            # Specifcy the block 1 split manually because the computer may guess wrong
 # block1split1 = DT.date(2015, 7, 6)
 # block1split23 = DT.date(2015, 7, 13)
 
 # Un-comment these if turning off CGI to parse imported blockSplits
-'''
+# '''
 block1split1= DT.datetime.strptime(block1split1, "%Y-%m-%d")
 block1split23= DT.datetime.strptime(block1split23, "%Y-%m-%d")
 block1split1 = block1split1.date()
 block1split23 = block1split23.date()
-'''
+# '''
 ################################################################################
 ### Globals & Setup
 ################################################################################
@@ -145,7 +147,6 @@ htmlTemplate = 'blockParseTemplate.html'
 
 # Other globals
 allRes = {}
-# This line updated Feb '17 2/2 Amion format change to 2 letter abbrev
 week = dict(zip('Mo Tu We Th Fr Sa Su'.split(), range(7)))
 errMessage = ''
 fatal = 0
@@ -196,7 +197,7 @@ elif len(nameSet) == 1:
 else: print "whoa - regex found nothing"
 '''
 #################################################################################
-def AmionBlockScraper(urlStub, load, target, skillsDict, YrParam):
+def AmionBlockScraper(urlStub, load, skillsDict, YrParam):
     # First, load the main Amion landing page.
     message = ''
     f = 0
@@ -204,13 +205,30 @@ def AmionBlockScraper(urlStub, load, target, skillsDict, YrParam):
         r = requests.post(urlStub, data=load)
         html = r.text # This is outputting the html of the actual schedule landing page
         filestub = ''
-        link = re.search(target, html, re.I)
+        link = re.search(linkTar, html, re.I)
         FileParam = link.group(1)
         PageParam = link.group(2)
         FsParam = link.group(3)
         SbcParam = link.group(4)
 
-
+        '''
+        soup1 = bs(html)
+        atags = soup1.find_all('a')
+        for tag in atags:
+            if tag.string == 'Block':
+                b = tag['href']
+                b = b.encode('ascii', 'ignore')
+                fileStub = b.split('?')[1]
+                # Updated in June  '16, this allows construction of the url with
+                # the year 'Syr' parameter
+                params  = fileStub.split('&')
+                for param in params:
+                    if param[:4] == 'File': FileParam = param
+                    elif param[0:4] == 'Page': PageParam = param
+                    elif param[0:4] == 'Fsiz': FsParam = param
+                    elif param[0:4] == 'Sbci': SbcParam = param
+                    else: pass
+        '''
         fileStub = '?File=' + FileParam
 
         # Use that filename to construct the links to the class block schedule pages.
@@ -221,10 +239,9 @@ def AmionBlockScraper(urlStub, load, target, skillsDict, YrParam):
             # load['Skill'] = str(skill)
             # As above, I initially used urlencode instead of string concatenation,
             # but Amion expects the query string in this specific order.
+            # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&' + SbcParam
             url = urlStub + fileStub + '&' + YrParam + '&Page=' + PageParam + '&Skill=' + skill + '&Fsiz=' + FsParam + '&Sbcid=' + SbcParam
 
-            # Replaced this Feb '17 2/2 Amion HTML change
-            # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&' + SbcParam
             # The line below gets a different look to the page with that extra
             # parameter Hili, not sure what it does but seems not necessary
             # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&Hili=-1&' + SbcParam
@@ -432,6 +449,8 @@ def cellListParser(rowListI):
             rowBottoms.append(rotation)
         elif rotation['bottom'] == 0:
             rowTops.append(rotation)
+    print rowTops
+    print rowBottoms
 
     for blockNum in range(1, lastBlock + 1):
         blockBottoms = []
@@ -465,6 +484,8 @@ def cellListParser(rowListI):
                     if rotation['startDate'] + DT.timedelta(days=-1) >= blockStarts[blockNum]:
                         posStops.add(rotation['startDate'] + DT.timedelta(days=-1))
 
+        print 'posStarts: ', posStarts
+        print 'posStops: ', posStops
         # Only need to adjust the dates if there are tops. O/w dates should be
         # right from the split parsing. Hence the if len > 0:
         if len(blockTops) > 0:
@@ -509,6 +530,7 @@ def cellListParser(rowListI):
                 remStarts2 = sorted(list(posStarts2 - topStarts))
                 remStops1 = sorted(list(posStops1 - topStops))
                 remStops2 = sorted(list(posStops2 - topStops))
+                print 'remStarts1: ', remStarts1
 
                 # Go through the date adjusting for first split
                 if len(remStarts1) > 2:
@@ -523,6 +545,9 @@ def cellListParser(rowListI):
                                         'rotation' : blockBottoms[0]['rotation']}
                         schedule.append(splitBottom1)
                 else:
+                    print remStarts1
+                    print blockBottoms
+                    print rowListI
                     blockBottoms[0]['startDate'] = remStarts1[0]
                     blockBottoms[0]['stopDate'] = remStops1[0]
 
@@ -560,7 +585,7 @@ def cellListParser(rowListI):
 #################################################################################
 # This scrapes Amion & returns dict whose values are the html of the block
 # schedules
-skillsOut = AmionBlockScraper(urlStub, payload, linkTar, skills, SyrParam)
+skillsOut = AmionBlockScraper(urlStub, payload, skills, SyrParam)
 skills = skillsOut[0]
 errMessage += skillsOut[1]
 fatal += skillsOut[2]
@@ -580,6 +605,7 @@ for skill in skills:
 #################################################################################
 # Find the years from the Amion block page
     html = skills[skill]
+    # print html
     years = re.search(yearTar, html, re.I)
     fallYr = int(years.group(1))
     springYr = int(years.group(2))
@@ -701,35 +727,36 @@ for skill in skills:
         if AmionName[-1].isalpha() == False:
             AmionName = AmionName[:-1]
         if AmionName[0].isalpha() == False: continue
-    # Popoff & parse to dict the Coc date from the last cell
-        CoCRaw = rowListIn.pop(lastBlock)
-        # These slices updated Feb '17 for Amion format change
-        CoCweekDayStr = CoCRaw[:2]
-        CoCTime = CoCRaw[2:4]
-        CoCLoc = CoCRaw[4:]
-        try: CoCweekDay = week[CoCweekDayStr]
-        except KeyError: CoCweekDay = None
+        if AmionName == 'Dairo-A':
+        # Popoff & parse to dict the Coc date from the last cell
+            CoCRaw = rowListIn.pop(lastBlock)
+            CoCweekDayStr = CoCRaw[:2]
+            CoCTime = CoCRaw[2:4]
+            CoCLoc = CoCRaw[4:]
+            try: CoCweekDay = week[CoCweekDayStr]
+            except KeyError: CoCweekDay = None
 
-    # Setup data structures for ea resident/row of the table
-        CoCDict = {'weekday' : CoCweekDay,
-                'weekdayStr' : CoCweekDayStr,
-                'time' : CoCTime,
-                'location' : CoCLoc}
-        # resDict = {AmionName : {
-        resDict = {
-                    'pgy' : classR,
-                'schedule' : [],
-                'CoC' : CoCDict}
-        schedule = []
+        # Setup data structures for ea resident/row of the table
+            CoCDict = {'weekday' : CoCweekDay,
+                    'weekdayStr' : CoCweekDayStr,
+                    'time' : CoCTime,
+                    'location' : CoCLoc}
+            # resDict = {AmionName : {
+            resDict = {
+                        'pgy' : classR,
+                    'schedule' : [],
+                    'CoC' : CoCDict}
+            schedule = []
 
-    # Finally, put the sorted rotations list into the current resDict
-        sortSchedOut1 = cellListParser(rowListIn)
-        sortSchedOut = sortSchedOut1[0]
-        errMessage += sortSchedOut1[1]
-        fatal += sortSchedOut1[2]
-        resDict['schedule'] = sortSchedOut
-    # And output the whole resident's info to the main dict
-        allRes[AmionName] = resDict
+        # Finally, put the sorted rotations list into the current resDict
+            # if AmionName not in ['Herrera-C', 'Dairo-A']: sortSchedOut1 = cellListParser(rowListIn)
+            sortSchedOut1 = cellListParser(rowListIn)
+            sortSchedOut = sortSchedOut1[0]
+            errMessage += sortSchedOut1[1]
+            fatal += sortSchedOut1[2]
+            resDict['schedule'] = sortSchedOut
+        # And output the whole resident's info to the main dict
+            allRes[AmionName] = resDict
 
 '''
 allRes looks like this:

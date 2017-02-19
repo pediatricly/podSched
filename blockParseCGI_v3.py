@@ -116,7 +116,6 @@ except: version = 'blockParseCGI.py'
 # sure how stable it is.
 urlStub = "http://amion.com/cgi-bin/ocs"
 payload = {'login' : 'ucsfpeds'}
-linkTar = '<a href="\./ocs\?File=(.+?)&Page=(.+?)&Fsiz=(.+?)&Sbcid=(.+?)".+?>Block<'
 skills = {'2': '', '3': '', '4':''}
 
 # Found in June '16 that Amion changes subtly once the new intern schedule gets
@@ -145,8 +144,7 @@ htmlTemplate = 'blockParseTemplate.html'
 
 # Other globals
 allRes = {}
-# This line updated Feb '17 2/2 Amion format change to 2 letter abbrev
-week = dict(zip('Mo Tu We Th Fr Sa Su'.split(), range(7)))
+week = dict(zip('Mon Tue Wed Thu Fri Sat Sun'.split(), range(7)))
 errMessage = ''
 fatal = 0
 
@@ -196,7 +194,7 @@ elif len(nameSet) == 1:
 else: print "whoa - regex found nothing"
 '''
 #################################################################################
-def AmionBlockScraper(urlStub, load, target, skillsDict, YrParam):
+def AmionBlockScraper(urlStub, load, skillsDict, YrParam):
     # First, load the main Amion landing page.
     message = ''
     f = 0
@@ -204,14 +202,25 @@ def AmionBlockScraper(urlStub, load, target, skillsDict, YrParam):
         r = requests.post(urlStub, data=load)
         html = r.text # This is outputting the html of the actual schedule landing page
         filestub = ''
-        link = re.search(target, html, re.I)
-        FileParam = link.group(1)
-        PageParam = link.group(2)
-        FsParam = link.group(3)
-        SbcParam = link.group(4)
 
+        soup1 = bs(html)
+        atags = soup1.find_all('a')
+        for tag in atags:
+            if tag.string == 'Block':
+                b = tag['href']
+                b = b.encode('ascii', 'ignore')
+                fileStub = b.split('?')[1]
+                # Updated in June  '16, this allows construction of the url with
+                # the year 'Syr' parameter
+                params  = fileStub.split('&')
+                for param in params:
+                    if param[:4] == 'File': FileParam = param
+                    elif param[0:4] == 'Page': PageParam = param
+                    elif param[0:4] == 'Fsiz': FsParam = param
+                    elif param[0:4] == 'Sbci': SbcParam = param
+                    else: pass
 
-        fileStub = '?File=' + FileParam
+                fileStub = '?' + FileParam
 
         # Use that filename to construct the links to the class block schedule pages.
         # Those links vary only by the skill parameter, hence this loop.
@@ -221,10 +230,7 @@ def AmionBlockScraper(urlStub, load, target, skillsDict, YrParam):
             # load['Skill'] = str(skill)
             # As above, I initially used urlencode instead of string concatenation,
             # but Amion expects the query string in this specific order.
-            url = urlStub + fileStub + '&' + YrParam + '&Page=' + PageParam + '&Skill=' + skill + '&Fsiz=' + FsParam + '&Sbcid=' + SbcParam
-
-            # Replaced this Feb '17 2/2 Amion HTML change
-            # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&' + SbcParam
+            url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&' + SbcParam
             # The line below gets a different look to the page with that extra
             # parameter Hili, not sure what it does but seems not necessary
             # url = urlStub + fileStub + '&' + YrParam + '&' + PageParam + '&Skill=' + skill + '&' + FsParam + '&Hili=-1&' + SbcParam
@@ -560,7 +566,7 @@ def cellListParser(rowListI):
 #################################################################################
 # This scrapes Amion & returns dict whose values are the html of the block
 # schedules
-skillsOut = AmionBlockScraper(urlStub, payload, linkTar, skills, SyrParam)
+skillsOut = AmionBlockScraper(urlStub, payload, skills, SyrParam)
 skills = skillsOut[0]
 errMessage += skillsOut[1]
 fatal += skillsOut[2]
@@ -580,6 +586,7 @@ for skill in skills:
 #################################################################################
 # Find the years from the Amion block page
     html = skills[skill]
+    print html
     years = re.search(yearTar, html, re.I)
     fallYr = int(years.group(1))
     springYr = int(years.group(2))
@@ -703,10 +710,9 @@ for skill in skills:
         if AmionName[0].isalpha() == False: continue
     # Popoff & parse to dict the Coc date from the last cell
         CoCRaw = rowListIn.pop(lastBlock)
-        # These slices updated Feb '17 for Amion format change
-        CoCweekDayStr = CoCRaw[:2]
-        CoCTime = CoCRaw[2:4]
-        CoCLoc = CoCRaw[4:]
+        CoCweekDayStr = CoCRaw[:3]
+        CoCTime = CoCRaw[3:5]
+        CoCLoc = CoCRaw[5:]
         try: CoCweekDay = week[CoCweekDayStr]
         except KeyError: CoCweekDay = None
 
